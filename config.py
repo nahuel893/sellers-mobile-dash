@@ -20,6 +20,15 @@ COLORES_GRUPO = {
     'IMPORTADAS':     '#E65100',
 }
 
+# --- Categorías de producto (slides del carrusel) ---
+CATEGORIAS = ['CERVEZAS', 'MULTICCU', 'AGUAS_DANONE']
+
+NOMBRES_CATEGORIA = {
+    'CERVEZAS':     'Cervezas',
+    'MULTICCU':     'MultiCCU',
+    'AGUAS_DANONE': 'Aguas Danone',
+}
+
 # --- Parámetros temporales (se calcularán dinámicamente después) ---
 DIAS_HABILES = 24
 DIAS_TRANSCURRIDOS = 11

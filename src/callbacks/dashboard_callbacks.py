@@ -2,17 +2,17 @@
 from dash import html, callback, Input, Output
 import dash_bootstrap_components as dbc
 
-from config import GRUPOS_MARCA
+from config import GRUPOS_MARCA, CATEGORIAS, NOMBRES_CATEGORIA
 from src.services.ventas_service import (
     get_vendedores_por_supervisor, get_datos_vendedor, get_resumen_vendedor,
 )
 from src.layouts.gauges import crear_gauge_total, crear_ring_marca
 
 
-def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
-    """Genera la sección completa de un vendedor (gauge + marcas)."""
-    datos = get_datos_vendedor(df, vendedor)
-    resumen = get_resumen_vendedor(df, vendedor)
+def _crear_slide_cervezas(df, vendedor):
+    """Slide de cervezas: gauge total + detalle por marca."""
+    datos = get_datos_vendedor(df, vendedor, 'CERVEZAS')
+    resumen = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
 
     gauge_total = crear_gauge_total(
         pct=resumen['pct_tendencia'],
@@ -42,10 +42,7 @@ def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
         for card in cards_marcas
     ]
 
-    vendor_id = vendedor.lower().replace(' ', '-')
-
     return html.Div([
-        html.Div(id=f'vendor-{vendor_id}', className='vendor-anchor'),
         html.Div([
             html.H6('Total Cervezas', className='section-title'),
             gauge_total,
@@ -54,6 +51,55 @@ def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
             html.H6('Detalle por Marca', className='section-title'),
             dbc.Row(cols_marcas, className='marca-grid'),
         ], className='section-marcas'),
+    ], className='carousel-slide')
+
+
+def _crear_slide_otros(df, vendedor, categorias):
+    """Slide combinado con gauges de varias categorías (sin desglose por marca)."""
+    secciones = []
+    for cat in categorias:
+        resumen = get_resumen_vendedor(df, vendedor, cat)
+        nombre = NOMBRES_CATEGORIA.get(cat, cat)
+
+        gauge = crear_gauge_total(
+            pct=resumen['pct_tendencia'],
+            ventas=resumen['ventas'],
+            cupo=resumen['cupo'],
+            falta=resumen['falta'],
+            tendencia=resumen['tendencia'],
+        )
+        secciones.append(html.Div([
+            html.H6(f'Total {nombre}', className='section-title'),
+            gauge,
+        ], className='section-total'))
+
+    return html.Div(secciones, className='carousel-slide')
+
+
+def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
+    """Genera el carrusel completo de un vendedor con slides por categoría."""
+    vendor_id = vendedor.lower().replace(' ', '-')
+
+    otros = [c for c in CATEGORIAS if c != 'CERVEZAS']
+
+    slides = [
+        _crear_slide_cervezas(df, vendedor),
+        _crear_slide_otros(df, vendedor, otros),
+    ]
+
+    dots = [
+        html.Span(
+            className='carousel-dot active' if i == 0 else 'carousel-dot'
+        )
+        for i in range(len(slides))
+    ]
+
+    return html.Div([
+        html.Div(id=f'vendor-{vendor_id}', className='vendor-anchor'),
+        html.Div([
+            html.Div(slides, className='carousel-track'),
+            html.Div(dots, className='carousel-dots'),
+        ], className='vendor-carousel'),
     ], className='vendor-section')
 
 

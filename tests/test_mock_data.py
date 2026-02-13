@@ -14,7 +14,7 @@ def test_dataframe_not_empty(df):
 
 def test_dataframe_columns(df):
     expected = [
-        'vendedor', 'supervisor', 'grupo_marca', 'ventas', 'cupo',
+        'vendedor', 'supervisor', 'categoria', 'grupo_marca', 'ventas', 'cupo',
         'falta', 'tendencia', 'pct_tendencia', 'vta_diaria_necesaria',
     ]
     for col in expected:
@@ -38,9 +38,35 @@ def test_supervisores_exist(df):
     assert len(supervisores) >= 1
 
 
-def test_each_vendor_has_all_groups(df):
+def test_each_vendor_has_all_beer_groups(df):
     from config import GRUPOS_MARCA
-    for vendedor in df['vendedor'].unique():
-        grupos = df[df['vendedor'] == vendedor]['grupo_marca'].tolist()
+    cervezas = df[df['categoria'] == 'CERVEZAS']
+    for vendedor in cervezas['vendedor'].unique():
+        grupos = cervezas[cervezas['vendedor'] == vendedor]['grupo_marca'].tolist()
         for g in GRUPOS_MARCA:
             assert g in grupos, f"{vendedor} no tiene grupo {g}"
+
+
+def test_categorias_exist(df):
+    from config import CATEGORIAS
+    cats = df['categoria'].unique().tolist()
+    for cat in CATEGORIAS:
+        assert cat in cats, f"Falta categoría: {cat}"
+
+
+def test_multiccu_has_no_grupo_marca(df):
+    multiccu = df[df['categoria'] == 'MULTICCU']
+    assert multiccu['grupo_marca'].isna().all()
+
+
+def test_aguas_danone_has_no_grupo_marca(df):
+    aguas = df[df['categoria'] == 'AGUAS_DANONE']
+    assert aguas['grupo_marca'].isna().all()
+
+
+def test_all_vendors_have_all_categories(df):
+    from config import CATEGORIAS
+    for vendedor in df['vendedor'].unique():
+        cats = df[df['vendedor'] == vendedor]['categoria'].unique().tolist()
+        for cat in CATEGORIAS:
+            assert cat in cats, f"{vendedor} no tiene categoría {cat}"

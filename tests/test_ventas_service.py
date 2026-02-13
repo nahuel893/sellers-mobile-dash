@@ -60,11 +60,19 @@ def test_get_vendedores_supervisor_inexistente(df):
     assert vendedores == []
 
 
-def test_get_datos_vendedor(df):
+def test_get_datos_vendedor_cervezas(df):
     primer_vendedor = df['vendedor'].iloc[0]
-    datos = get_datos_vendedor(df, primer_vendedor)
+    datos = get_datos_vendedor(df, primer_vendedor, 'CERVEZAS')
     assert len(datos) > 0
     assert (datos['vendedor'] == primer_vendedor).all()
+    assert (datos['categoria'] == 'CERVEZAS').all()
+
+
+def test_get_datos_vendedor_multiccu(df):
+    primer_vendedor = df['vendedor'].iloc[0]
+    datos = get_datos_vendedor(df, primer_vendedor, 'MULTICCU')
+    assert len(datos) == 1
+    assert (datos['categoria'] == 'MULTICCU').all()
 
 
 # --- Tests de resumen ---
@@ -89,5 +97,20 @@ def test_resumen_falta_equals_cupo_minus_ventas(df):
 
 def test_resumen_pct_is_reasonable(df):
     for vendedor in df['vendedor'].unique():
-        resumen = get_resumen_vendedor(df, vendedor)
+        resumen = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
         assert 0 <= resumen['pct_tendencia'] <= 300
+
+
+def test_resumen_multiccu(df):
+    primer_vendedor = df['vendedor'].iloc[0]
+    resumen = get_resumen_vendedor(df, primer_vendedor, 'MULTICCU')
+    assert resumen['ventas'] > 0
+    assert resumen['cupo'] > 0
+    assert resumen['falta'] == resumen['cupo'] - resumen['ventas']
+
+
+def test_resumen_aguas_danone(df):
+    primer_vendedor = df['vendedor'].iloc[0]
+    resumen = get_resumen_vendedor(df, primer_vendedor, 'AGUAS_DANONE')
+    assert resumen['ventas'] > 0
+    assert resumen['cupo'] > 0

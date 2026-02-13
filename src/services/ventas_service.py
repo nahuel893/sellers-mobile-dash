@@ -31,14 +31,15 @@ def get_vendedores_por_supervisor(df, supervisor):
     )
 
 
-def get_datos_vendedor(df, vendedor):
-    """Datos de un vendedor específico."""
-    return df[df['vendedor'] == vendedor].copy()
+def get_datos_vendedor(df, vendedor, categoria='CERVEZAS'):
+    """Datos de un vendedor filtrados por categoría."""
+    mask = (df['vendedor'] == vendedor) & (df['categoria'] == categoria)
+    return df[mask].copy()
 
 
-def get_resumen_vendedor(df, vendedor):
-    """Resumen total de un vendedor (todas las marcas)."""
-    datos = get_datos_vendedor(df, vendedor)
+def get_resumen_vendedor(df, vendedor, categoria='CERVEZAS'):
+    """Resumen total de un vendedor para una categoría."""
+    datos = get_datos_vendedor(df, vendedor, categoria)
     total_ventas = datos['ventas'].sum()
     total_cupo = datos['cupo'].sum()
     total_falta = datos['falta'].sum()
