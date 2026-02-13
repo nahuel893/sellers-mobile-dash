@@ -1,5 +1,5 @@
 /* ============================================================
-   Dashboard Avance Preventa - Mobile First
+   Dashboard Avance Preventa - Responsive (Mobile + Desktop)
    ============================================================ */
 
 /* --- Reset & Base --- */
@@ -16,7 +16,7 @@ body {
 }
 
 .app-container {
-    max-width: 480px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 !important;
     background-color: #f0f2f5;
@@ -181,8 +181,13 @@ body {
 }
 
 /* --- Marca Cards --- */
-.marca-row {
-    margin-bottom: 10px;
+.marca-grid {
+    --bs-gutter-x: 10px;
+    --bs-gutter-y: 10px;
+}
+
+.marca-col {
+    margin-bottom: 0;
 }
 
 .marca-card {
@@ -259,17 +264,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* --- Responsive --- */
-@media (min-width: 481px) {
-    .app-container {
-        margin-top: 10px;
-        border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        min-height: auto;
-        padding-bottom: 20px !important;
-    }
-}
-
 /* --- Plotly overrides --- */
 .js-plotly-plot .plotly .main-svg {
     border-radius: 12px;
@@ -280,4 +274,129 @@ body {
 #dropdown-vendedor {
     font-family: 'Inter', sans-serif;
     font-size: 0.82rem;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* --- Mobile (default, < 768px) --- */
+@media (max-width: 767px) {
+    .app-container {
+        max-width: 480px;
+    }
+}
+
+/* --- Tablet (768px - 1199px) --- */
+@media (min-width: 768px) {
+    .app-container {
+        max-width: 900px;
+        margin-top: 16px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        min-height: auto;
+        padding-bottom: 20px !important;
+    }
+
+    .header-section {
+        padding: 24px 24px 20px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .filters-section {
+        padding: 16px 24px 8px;
+    }
+
+    .section-total {
+        padding: 12px 24px 0;
+    }
+
+    .section-marcas {
+        padding: 0 24px 24px;
+    }
+
+    .header-title {
+        font-size: 1.5rem;
+    }
+
+    .dias-item {
+        padding: 10px 16px;
+    }
+
+    .summary-card {
+        padding: 12px 20px 18px;
+    }
+}
+
+/* --- Desktop (>= 1200px) --- */
+@media (min-width: 1200px) {
+    .app-container {
+        max-width: 1400px;
+    }
+
+    .header-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 20px 32px;
+    }
+
+    .header-title {
+        font-size: 1.6rem;
+        margin-bottom: 0;
+    }
+
+    .dias-row {
+        margin-top: 0;
+        gap: 12px;
+    }
+
+    .dias-item {
+        min-width: 110px;
+    }
+
+    .filters-section {
+        padding: 16px 32px 8px;
+        max-width: 500px;
+    }
+
+    .section-total {
+        padding: 12px 32px 0;
+    }
+
+    .section-marcas {
+        padding: 0 32px 32px;
+    }
+
+    .summary-card {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 16px 24px;
+    }
+
+    .gauge-total {
+        flex-shrink: 0;
+        width: 280px;
+    }
+
+    .metrics-row {
+        flex: 1;
+        margin-top: 0;
+        gap: 12px;
+    }
+
+    .metric-item {
+        padding: 12px 8px;
+    }
+
+    .metric-label {
+        font-size: 0.65rem;
+    }
+
+    .metric-value {
+        font-size: 1.1rem;
+    }
 }

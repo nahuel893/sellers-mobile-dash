@@ -56,12 +56,11 @@ def register_callbacks(df):
             )
             cards_marcas.append(card)
 
-        filas_grilla = []
-        for i in range(0, len(cards_marcas), 2):
-            cols = [dbc.Col(cards_marcas[i], width=6)]
-            if i + 1 < len(cards_marcas):
-                cols.append(dbc.Col(cards_marcas[i + 1], width=6))
-            filas_grilla.append(dbc.Row(cols, className='marca-row'))
+        # Grilla responsive: 2 cols mobile, 3 tablet, 6 desktop
+        cols_marcas = [
+            dbc.Col(card, xs=6, md=4, xl=2, className='marca-col')
+            for card in cards_marcas
+        ]
 
         return html.Div([
             html.Div([
@@ -70,6 +69,6 @@ def register_callbacks(df):
             ], className='section-total'),
             html.Div([
                 html.H6('Detalle por Marca', className='section-title'),
-                *filas_grilla,
+                dbc.Row(cols_marcas, className='marca-grid'),
             ], className='section-marcas'),
         ])
