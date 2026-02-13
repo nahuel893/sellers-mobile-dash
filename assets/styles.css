@@ -84,12 +84,22 @@ body {
 /* --- Filters --- */
 .filters-section {
     padding: 14px 16px 6px;
+}
+
+.filters-row {
     display: flex;
     gap: 10px;
 }
 
 .filter-group {
     flex: 1;
+}
+
+.check-todos {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #495057;
 }
 
 .filter-label {
@@ -274,6 +284,68 @@ body {
 #dropdown-vendedor {
     font-family: 'Inter', sans-serif;
     font-size: 0.82rem;
+}
+
+/* --- Vendor Index (desplegar todos) --- */
+.vendor-index {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f0f2f5;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.index-link {
+    display: inline-block;
+    padding: 4px 10px;
+    background: white;
+    border: 1.5px solid #dee2e6;
+    border-radius: 16px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.index-link:hover {
+    background: #1a1a2e;
+    color: white;
+    border-color: #1a1a2e;
+    text-decoration: none;
+}
+
+.vendor-block {
+    border-top: 2px solid #dee2e6;
+    padding-top: 8px;
+    margin-top: 4px;
+}
+
+.vendor-block:first-of-type {
+    border-top: none;
+    margin-top: 0;
+}
+
+.vendor-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    padding: 0 16px;
+    margin-bottom: 0;
+}
+
+.vendor-pct {
+    font-size: 0.85rem;
+    font-weight: 600;
+    opacity: 0.6;
+}
+
+.vendor-anchor {
+    scroll-margin-top: 60px;
 }
 
 /* ============================================================
