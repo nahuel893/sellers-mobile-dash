@@ -1,5 +1,5 @@
 """
-Dashboard Avance Preventa - Mobile First
+Inicialización de la app Dash y ensamblaje de componentes.
 """
 import dash
 from dash import html
@@ -21,6 +21,7 @@ DF = get_mock_dataframe()
 # ============================================================
 app = dash.Dash(
     __name__,
+    assets_folder='../assets',
     external_stylesheets=[
         dbc.themes.BOOTSTRAP,
         'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
@@ -44,9 +45,3 @@ app.layout = dbc.Container([
 # Callbacks
 # ============================================================
 register_callbacks(DF)
-
-# ============================================================
-# Run
-# ============================================================
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8050)
