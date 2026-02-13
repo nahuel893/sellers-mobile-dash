@@ -12,9 +12,9 @@ GRUPOS_MARCA = ['SALTA', 'HEINEKEN', 'IMPERIAL', 'MILLER', 'MULTICERVEZAS', 'IMP
 
 # Colores por grupo de marca
 COLORES_GRUPO = {
-    'SALTA':          '#D42A2A',
+    'SALTA':          '#1565C0',
     'HEINEKEN':       '#00A650',
-    'IMPERIAL':       '#1565C0',
+    'IMPERIAL':       '#C8960C',
     'MILLER':         '#F9A825',
     'MULTICERVEZAS':  '#7B1FA2',
     'IMPORTADAS':     '#E65100',
@@ -32,7 +32,7 @@ COLOR_ROJO = '#F44336'
 
 def color_por_rendimiento(pct_tendencia):
     """Retorna color según % de tendencia vs cupo."""
-    if pct_tendencia >= 90:
+    if pct_tendencia >= 80:
         return COLOR_VERDE
     elif pct_tendencia >= 70:
         return COLOR_AMARILLO

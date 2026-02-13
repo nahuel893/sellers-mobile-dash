@@ -181,7 +181,7 @@ body {
 
 .metric-value {
     display: block;
-    font-size: 0.88rem;
+    font-size: 1.14rem;
     font-weight: 700;
     color: #1a1a2e;
 }
@@ -261,7 +261,7 @@ body {
 
 .metric-value-sm {
     display: block;
-    font-size: 0.78rem;
+    font-size: 1.01rem;
     font-weight: 700;
     color: #1a1a2e;
 }
@@ -469,6 +469,6 @@ body {
     }
 
     .metric-value {
-        font-size: 1.1rem;
+        font-size: 1.43rem;
     }
 }
