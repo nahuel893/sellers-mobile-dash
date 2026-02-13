@@ -1,0 +1,283 @@
+/* ============================================================
+   Dashboard Avance Preventa - Mobile First
+   ============================================================ */
+
+/* --- Reset & Base --- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+.app-container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 !important;
+    background-color: #f0f2f5;
+    min-height: 100vh;
+}
+
+/* --- Header --- */
+.header-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+    padding: 20px 16px 16px;
+    border-radius: 0 0 20px 20px;
+}
+
+.header-title {
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+}
+
+.header-date {
+    font-size: 0.78rem;
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.dias-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.dias-item {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+}
+
+.dias-label {
+    display: block;
+    font-size: 0.65rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.dias-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.dias-trans {
+    color: #64B5F6;
+}
+
+.dias-rest {
+    color: #FFC107;
+}
+
+/* --- Filters --- */
+.filters-section {
+    padding: 14px 16px 6px;
+    display: flex;
+    gap: 10px;
+}
+
+.filter-group {
+    flex: 1;
+}
+
+.filter-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.filter-dropdown .Select-control,
+.filter-dropdown .css-13cymwt-control,
+.filter-dropdown > div > div:first-child {
+    border-radius: 10px !important;
+    border: 1.5px solid #dee2e6 !important;
+    font-size: 0.82rem;
+    font-family: 'Inter', sans-serif;
+    min-height: 38px;
+    background: white;
+}
+
+/* --- Sections --- */
+.section-total {
+    padding: 10px 16px 0;
+}
+
+.section-marcas {
+    padding: 0 16px 20px;
+}
+
+.section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+    margin-top: 14px;
+}
+
+/* --- Summary Card (Total) --- */
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 8px 12px 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.gauge-total .js-plotly-plot {
+    margin: 0 auto;
+}
+
+.metrics-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.metric-item {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.metric-label {
+    display: block;
+    font-size: 0.6rem;
+    color: #adb5bd;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.metric-value {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.metric-falta {
+    color: #F44336;
+}
+
+/* --- Marca Cards --- */
+.marca-row {
+    margin-bottom: 10px;
+}
+
+.marca-card {
+    border: none !important;
+    border-radius: 14px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    height: 100%;
+}
+
+.marca-card-body {
+    padding: 10px 10px 12px !important;
+}
+
+.marca-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0;
+}
+
+.marca-color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.marca-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.gauge-marca .js-plotly-plot {
+    margin: 0 auto;
+}
+
+.metrics-row-sm {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.metric-item-sm {
+    flex: 1;
+    text-align: center;
+}
+
+.metric-label-sm {
+    display: block;
+    font-size: 0.55rem;
+    color: #adb5bd;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+}
+
+.metric-value-sm {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+/* --- Empty State --- */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #adb5bd;
+    font-size: 0.9rem;
+}
+
+/* --- Responsive --- */
+@media (min-width: 481px) {
+    .app-container {
+        margin-top: 10px;
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        min-height: auto;
+        padding-bottom: 20px !important;
+    }
+}
+
+/* --- Plotly overrides --- */
+.js-plotly-plot .plotly .main-svg {
+    border-radius: 12px;
+}
+
+/* Dash dropdown styling */
+#dropdown-supervisor,
+#dropdown-vendedor {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+}
