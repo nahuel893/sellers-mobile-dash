@@ -3,7 +3,7 @@ Mock data para desarrollo del dashboard.
 Simula la estructura que vendrá de la capa Gold.
 """
 import pandas as pd
-from config import GRUPOS_MARCA, DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
+from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
 
 # ============================================================
 # Datos mock: cupos y ventas por vendedor / grupo de marca
@@ -87,11 +87,10 @@ _datos = [
 
 
 def get_mock_dataframe():
-    """Retorna DataFrame con datos mock de ventas y cupos."""
+    """Retorna DataFrame con datos crudos de ventas y cupos."""
     df = pd.DataFrame(_datos, columns=[
         'vendedor', 'supervisor', 'grupo_marca', 'ventas', 'cupo'
     ])
-    # Cálculos derivados
     df['falta'] = df['cupo'] - df['ventas']
     df['tendencia'] = (df['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS).round(0)
     df['pct_tendencia'] = (
@@ -101,38 +100,3 @@ def get_mock_dataframe():
         df['falta'] / DIAS_RESTANTES
     ).round(1)
     return df
-
-
-def get_supervisores(df):
-    """Lista de supervisores disponibles."""
-    return sorted(df['supervisor'].unique().tolist())
-
-
-def get_vendedores_por_supervisor(df, supervisor):
-    """Lista de vendedores de un supervisor."""
-    return sorted(
-        df[df['supervisor'] == supervisor]['vendedor'].unique().tolist()
-    )
-
-
-def get_datos_vendedor(df, vendedor):
-    """Datos de un vendedor específico."""
-    return df[df['vendedor'] == vendedor].copy()
-
-
-def get_resumen_vendedor(df, vendedor):
-    """Resumen total de un vendedor (todas las marcas)."""
-    datos = get_datos_vendedor(df, vendedor)
-    total_ventas = datos['ventas'].sum()
-    total_cupo = datos['cupo'].sum()
-    total_falta = datos['falta'].sum()
-    total_tendencia = datos['tendencia'].sum()
-    pct_total = round(total_tendencia / total_cupo * 100) if total_cupo > 0 else 0
-    return {
-        'vendedor': vendedor,
-        'ventas': int(total_ventas),
-        'cupo': int(total_cupo),
-        'falta': int(total_falta),
-        'tendencia': int(total_tendencia),
-        'pct_tendencia': pct_total,
-    }
