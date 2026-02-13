@@ -11,37 +11,10 @@ from config import (
     DIAS_TRANSCURRIDOS, DIAS_RESTANTES, color_por_rendimiento,
 )
 from src.data.mock_data import get_mock_dataframe
-
-
-def get_supervisores(df):
-    return sorted(df['supervisor'].unique().tolist())
-
-
-def get_vendedores_por_supervisor(df, supervisor):
-    return sorted(
-        df[df['supervisor'] == supervisor]['vendedor'].unique().tolist()
-    )
-
-
-def get_datos_vendedor(df, vendedor):
-    return df[df['vendedor'] == vendedor].copy()
-
-
-def get_resumen_vendedor(df, vendedor):
-    datos = get_datos_vendedor(df, vendedor)
-    total_ventas = datos['ventas'].sum()
-    total_cupo = datos['cupo'].sum()
-    total_falta = datos['falta'].sum()
-    total_tendencia = datos['tendencia'].sum()
-    pct_total = round(total_tendencia / total_cupo * 100) if total_cupo > 0 else 0
-    return {
-        'vendedor': vendedor,
-        'ventas': int(total_ventas),
-        'cupo': int(total_cupo),
-        'falta': int(total_falta),
-        'tendencia': int(total_tendencia),
-        'pct_tendencia': pct_total,
-    }
+from src.services.ventas_service import (
+    get_supervisores, get_vendedores_por_supervisor,
+    get_datos_vendedor, get_resumen_vendedor,
+)
 
 # ============================================================
 # Datos
