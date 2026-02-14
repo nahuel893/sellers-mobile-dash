@@ -1,15 +1,18 @@
 """Callbacks del dashboard principal."""
-from dash import html, callback, Input, Output
+from urllib.parse import unquote
+
+from dash import html, dcc, callback, Input, Output
 import dash_bootstrap_components as dbc
 
 from config import GRUPOS_MARCA, CATEGORIAS, NOMBRES_CATEGORIA
 from src.services.ventas_service import (
-    get_supervisores, get_vendedores_por_supervisor,
+    get_sucursales, get_supervisores, get_vendedores_por_supervisor,
     get_datos_vendedor, get_resumen_vendedor,
     get_datos_supervisor, get_resumen_supervisor,
     get_datos_sucursal, get_resumen_sucursal,
 )
 from src.layouts.gauges import crear_gauge_total, crear_ring_marca
+from src.layouts.filters import crear_filtros
 
 
 def _crear_slide_cervezas(datos, resumen):
@@ -184,8 +187,61 @@ def _crear_indice_vendedores(vendedores):
     return html.Div(links, className='vendor-index')
 
 
+def _parse_url(pathname):
+    """Parsea la URL y retorna (vista, param).
+
+    Rutas soportadas:
+        /                           → ('home', None)
+        /vendedor/<nombre>          → ('vendedor', nombre)
+        /supervisor/<nombre>?suc=X  → ('supervisor', nombre)
+        /sucursal/<id>              → ('sucursal', id_string)
+    """
+    if not pathname or pathname == '/':
+        return 'home', None
+    parts = [p for p in pathname.strip('/').split('/') if p]
+    if len(parts) == 2:
+        vista = parts[0].lower()
+        param = unquote(parts[1])
+        if vista in ('vendedor', 'supervisor', 'sucursal'):
+            return vista, param
+    return 'home', None
+
+
 def register_callbacks(df):
     """Registra todos los callbacks del dashboard."""
+
+    @callback(
+        Output('page-content', 'children'),
+        Input('url', 'pathname'),
+        Input('url', 'search'),
+    )
+    def router(pathname, search):
+        """Renderiza la vista según la URL."""
+        vista, param = _parse_url(pathname)
+
+        if vista == 'home':
+            sucursales = get_sucursales(df)
+            return html.Div([
+                crear_filtros(sucursales),
+                html.Div(id='dashboard-content'),
+            ])
+
+        if vista == 'vendedor':
+            return _render_vendedor_page(df, param)
+
+        if vista == 'supervisor':
+            # Extraer ?sucursal=X del query string
+            sucursal = None
+            if search:
+                for part in search.lstrip('?').split('&'):
+                    if part.startswith('sucursal='):
+                        sucursal = unquote(part.split('=', 1)[1])
+            return _render_supervisor_page(df, param, sucursal)
+
+        if vista == 'sucursal':
+            return _render_sucursal_page(df, param)
+
+        return html.Div('Página no encontrada', className='empty-state')
 
     @callback(
         Output('dropdown-supervisor', 'options'),
@@ -253,3 +309,64 @@ def register_callbacks(df):
         parts = [s for s in [seccion_suc, seccion_sup] if s is not None]
         parts.append(_crear_seccion_vendedor(df, vendedor))
         return html.Div(parts)
+
+
+def _render_vendedor_page(df, vendedor):
+    """Vista directa de un vendedor (sin filtros)."""
+    datos = get_datos_vendedor(df, vendedor, 'CERVEZAS')
+    if datos.empty:
+        return html.Div(f'Vendedor "{vendedor}" no encontrado', className='empty-state')
+
+    resumen = get_resumen_vendedor(df, vendedor)
+    return html.Div([
+        html.H5(
+            [vendedor, html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct')],
+            className='vendor-name',
+        ),
+        _crear_seccion_vendedor(df, vendedor),
+    ], className='vendor-block')
+
+
+def _render_supervisor_page(df, supervisor, sucursal=None):
+    """Vista de supervisor: su total + lista de vendedores."""
+    vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal)
+    if not vendedores:
+        return html.Div(f'Supervisor "{supervisor}" no encontrado', className='empty-state')
+
+    seccion_sup = _crear_seccion_supervisor(df, supervisor, sucursal)
+    indice = _crear_indice_vendedores(vendedores)
+
+    secciones = []
+    for v in vendedores:
+        resumen = get_resumen_vendedor(df, v)
+        secciones.append(html.Div([
+            html.H5(
+                [v, html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct')],
+                className='vendor-name',
+            ),
+            _crear_seccion_vendedor(df, v, con_anchor=True),
+        ], className='vendor-block'))
+
+    return html.Div([seccion_sup, indice, *secciones])
+
+
+def _render_sucursal_page(df, sucursal_param):
+    """Vista de sucursal: total + supervisores con resumen."""
+    # Buscar sucursal que matchee por ID o nombre completo
+    sucursales = get_sucursales(df)
+    sucursal = None
+    for s in sucursales:
+        if s.startswith(f'{sucursal_param} - ') or s == sucursal_param:
+            sucursal = s
+            break
+    if not sucursal:
+        return html.Div(f'Sucursal "{sucursal_param}" no encontrada', className='empty-state')
+
+    seccion_suc = _crear_seccion_sucursal(df, sucursal)
+    supervisores = get_supervisores(df, sucursal)
+
+    secciones = []
+    for sup in supervisores:
+        secciones.append(_crear_seccion_supervisor(df, sup, sucursal))
+
+    return html.Div([seccion_suc, *secciones])

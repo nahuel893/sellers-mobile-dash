@@ -2,13 +2,11 @@
 Inicialización de la app Dash y ensamblaje de componentes.
 """
 import dash
-from dash import html
+from dash import html, dcc
 import dash_bootstrap_components as dbc
 
 from src.data.data_loader import get_dataframe
-from src.services.ventas_service import get_sucursales
 from src.layouts.header import crear_header
-from src.layouts.filters import crear_filtros
 from src.callbacks.dashboard_callbacks import register_callbacks
 
 # ============================================================
@@ -29,16 +27,17 @@ app = dash.Dash(
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1, maximum-scale=1"},
     ],
+    suppress_callback_exceptions=True,
 )
 app.title = "Avance Preventa"
 
 # ============================================================
-# Layout
+# Layout — shell con routing
 # ============================================================
 app.layout = dbc.Container([
+    dcc.Location(id='url', refresh=False),
     crear_header(),
-    crear_filtros(get_sucursales(DF)),
-    html.Div(id='dashboard-content'),
+    html.Div(id='page-content'),
 ], fluid=True, className='app-container')
 
 # ============================================================
