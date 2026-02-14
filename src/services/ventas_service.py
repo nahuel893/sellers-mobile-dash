@@ -46,23 +46,14 @@ def get_datos_vendedor(df, vendedor, categoria='CERVEZAS'):
     return df[mask].copy()
 
 
-def get_resumen_vendedor(df, vendedor, categoria='CERVEZAS'):
-    """Resumen total de un vendedor para una categoría.
-
-    Para CERVEZAS: usa TOTAL_CERVEZAS cupo del Excel en vez de sumar
-    cupos individuales (porque el total incluye SALTA CAUTIVA1 que no
-    tiene gauge individual).
-    """
-    datos = get_datos_vendedor(df, vendedor, categoria)
-
-    # Separar TOTAL_CERVEZAS (fila auxiliar solo para cupo total)
+def _resumen_desde_datos(datos, categoria='CERVEZAS'):
+    """Calcula resumen (ventas, cupo, falta, tendencia, pct) desde un DataFrame filtrado."""
     datos_marcas = datos[datos['grupo_marca'] != 'TOTAL_CERVEZAS']
     fila_total = datos[datos['grupo_marca'] == 'TOTAL_CERVEZAS']
 
     total_ventas = datos_marcas['ventas'].sum()
     total_tendencia = calcular_tendencia(total_ventas)
 
-    # Cupo: usar TOTAL_CERVEZAS si existe, sino sumar individuales
     if not fila_total.empty and categoria == 'CERVEZAS':
         total_cupo = int(fila_total.iloc[0]['cupo'])
     else:
@@ -71,10 +62,60 @@ def get_resumen_vendedor(df, vendedor, categoria='CERVEZAS'):
     total_falta = total_cupo - int(total_ventas)
     pct_total = round(total_tendencia / total_cupo * 100) if total_cupo > 0 else 0
     return {
-        'vendedor': vendedor,
         'ventas': int(total_ventas),
         'cupo': total_cupo,
         'falta': total_falta,
         'tendencia': int(total_tendencia),
         'pct_tendencia': pct_total,
     }
+
+
+def get_resumen_vendedor(df, vendedor, categoria='CERVEZAS'):
+    """Resumen total de un vendedor para una categoría."""
+    datos = get_datos_vendedor(df, vendedor, categoria)
+    resumen = _resumen_desde_datos(datos, categoria)
+    resumen['vendedor'] = vendedor
+    return resumen
+
+
+def get_datos_supervisor(df, supervisor, sucursal=None, categoria='CERVEZAS'):
+    """Datos agregados de todos los vendedores de un supervisor, por grupo_marca."""
+    mask = (df['supervisor'] == supervisor) & (df['categoria'] == categoria)
+    if sucursal:
+        mask = mask & (df['sucursal'] == sucursal)
+    return _agregar_por_grupo_marca(df, mask, categoria)
+
+
+def get_resumen_supervisor(df, supervisor, sucursal=None, categoria='CERVEZAS'):
+    """Resumen total de un supervisor para una categoría."""
+    datos = get_datos_supervisor(df, supervisor, sucursal, categoria)
+    return _resumen_desde_datos(datos, categoria)
+
+
+def _agregar_por_grupo_marca(df, mask, categoria):
+    """Agrega ventas/cupo por grupo_marca y recalcula métricas derivadas."""
+    datos = df[mask].copy()
+    agg = datos.groupby('grupo_marca', as_index=False, dropna=False).agg({
+        'ventas': 'sum',
+        'cupo': 'sum',
+    })
+    agg['categoria'] = categoria
+    agg['falta'] = agg['cupo'] - agg['ventas']
+    agg['tendencia'] = agg['ventas'].apply(lambda v: calcular_tendencia(v))
+    agg['pct_tendencia'] = agg.apply(
+        lambda row: calcular_pct_tendencia(row['ventas'], row['cupo']),
+        axis=1,
+    )
+    return agg
+
+
+def get_datos_sucursal(df, sucursal, categoria='CERVEZAS'):
+    """Datos agregados de toda la sucursal, por grupo_marca."""
+    mask = (df['sucursal'] == sucursal) & (df['categoria'] == categoria)
+    return _agregar_por_grupo_marca(df, mask, categoria)
+
+
+def get_resumen_sucursal(df, sucursal, categoria='CERVEZAS'):
+    """Resumen total de una sucursal para una categoría."""
+    datos = get_datos_sucursal(df, sucursal, categoria)
+    return _resumen_desde_datos(datos, categoria)

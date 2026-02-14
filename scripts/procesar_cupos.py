@@ -21,11 +21,12 @@ import pandas as pd
 # Agregar raíz del proyecto al path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from config import MAPEO_DESAGREGADO_CUPO, NORMALIZAR_VENDEDOR
+from config import MAPEO_DESAGREGADO_CUPO, NORMALIZAR_VENDEDOR, VENDEDORES_EXCLUIR
 from src.data.db import get_connection
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos_badie')
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos.csv')
+SUPERVISORES_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'supervisores.xlsx')
 
 
 def _extraer_id_sucursal(texto):
@@ -65,6 +66,23 @@ def _cargar_lookup_sucursales():
     lookup = {}
     for _, row in df.iterrows():
         lookup[int(row['id_sucursal'])] = f"{int(row['id_sucursal'])} - {row['descripcion']}"
+    return lookup
+
+
+def _cargar_lookup_supervisores():
+    """Carga mapeo vendedor → supervisor desde supervisores.xlsx.
+
+    El Excel no tiene headers; la primera fila de datos aparece como
+    nombres de columna. Se lee con header=None para capturar todo.
+    """
+    if not os.path.exists(SUPERVISORES_PATH):
+        print("  AVISO: supervisores.xlsx no encontrado, se usará 'SIN SUPERVISOR'")
+        return {}
+
+    df = pd.read_excel(SUPERVISORES_PATH, header=None, names=['vendedor', 'supervisor'])
+    lookup = {}
+    for _, row in df.iterrows():
+        lookup[str(row['vendedor']).strip().upper()] = str(row['supervisor']).strip().upper()
     return lookup
 
 
@@ -148,6 +166,10 @@ def main():
     lookup_suc = _cargar_lookup_sucursales()
     print(f"  {len(lookup_suc)} sucursales cargadas")
 
+    print("Cargando lookup de supervisores...")
+    lookup_sup = _cargar_lookup_supervisores()
+    print(f"  {len(lookup_sup)} mapeos vendedor→supervisor cargados")
+
     print("\nLeyendo archivos Excel...")
     df_cc = _leer_excel_cc_valle()
     print(f"  CC_Valle: {len(df_cc)} filas")
@@ -184,6 +206,9 @@ def main():
     # Normalizar nombres de vendedor (dim_cliente → dim_vendedor)
     df['vendedor'] = df['vendedor'].replace(NORMALIZAR_VENDEDOR)
 
+    # Excluir vendedores que no son preventistas
+    df = df[~df['vendedor'].isin(VENDEDORES_EXCLUIR)]
+
     # Filtrar solo DESAGREGADO que nos interesan
     df = df[df['DESAGREGADO'].isin(MAPEO_DESAGREGADO_CUPO.keys())].copy()
 
@@ -203,8 +228,8 @@ def main():
     # Mapear id_sucursal → sucursal string ("id - nombre")
     df_cupos['sucursal'] = df_cupos['id_sucursal'].map(lookup_suc)
 
-    # Supervisor: por ahora vacío (se agregará cuando exista la tabla)
-    df_cupos['supervisor'] = 'SIN SUPERVISOR'
+    # Asignar supervisor desde lookup (vendedor → supervisor)
+    df_cupos['supervisor'] = df_cupos['vendedor'].str.upper().map(lookup_sup).fillna('SIN SUPERVISOR')
 
     # Ordenar y guardar
     df_cupos = df_cupos[['vendedor', 'sucursal', 'supervisor', 'categoria', 'grupo_marca', 'cupo']]

@@ -6,15 +6,14 @@ from config import GRUPOS_MARCA, CATEGORIAS, NOMBRES_CATEGORIA
 from src.services.ventas_service import (
     get_supervisores, get_vendedores_por_supervisor,
     get_datos_vendedor, get_resumen_vendedor,
+    get_datos_supervisor, get_resumen_supervisor,
+    get_datos_sucursal, get_resumen_sucursal,
 )
 from src.layouts.gauges import crear_gauge_total, crear_ring_marca
 
 
-def _crear_slide_cervezas(df, vendedor):
+def _crear_slide_cervezas(datos, resumen):
     """Slide de cervezas: gauge total + detalle por marca."""
-    datos = get_datos_vendedor(df, vendedor, 'CERVEZAS')
-    resumen = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
-
     gauge_total = crear_gauge_total(
         pct=resumen['pct_tendencia'],
         ventas=resumen['ventas'],
@@ -55,13 +54,13 @@ def _crear_slide_cervezas(df, vendedor):
     ], className='carousel-slide')
 
 
-def _crear_slide_otros(df, vendedor, categorias):
-    """Slide combinado con gauges de varias categorías (sin desglose por marca)."""
-    secciones = []
-    for cat in categorias:
-        resumen = get_resumen_vendedor(df, vendedor, cat)
-        nombre = NOMBRES_CATEGORIA.get(cat, cat)
+def _crear_slide_otros(resumenes):
+    """Slide combinado con gauges de varias categorías (sin desglose por marca).
 
+    resumenes: lista de (nombre_categoria, resumen_dict)
+    """
+    secciones = []
+    for nombre, resumen in resumenes:
         gauge = crear_gauge_total(
             pct=resumen['pct_tendencia'],
             ventas=resumen['ventas'],
@@ -77,17 +76,8 @@ def _crear_slide_otros(df, vendedor, categorias):
     return html.Div(secciones, className='carousel-slide')
 
 
-def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
-    """Genera el carrusel completo de un vendedor con slides por categoría."""
-    vendor_id = vendedor.lower().replace(' ', '-')
-
-    otros = [c for c in CATEGORIAS if c != 'CERVEZAS']
-
-    slides = [
-        _crear_slide_cervezas(df, vendedor),
-        _crear_slide_otros(df, vendedor, otros),
-    ]
-
+def _crear_carrusel(slides, anchor_id):
+    """Genera el carrusel con dots de navegación."""
     dots = [
         html.Span(
             className='carousel-dot active' if i == 0 else 'carousel-dot'
@@ -96,12 +86,87 @@ def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
     ]
 
     return html.Div([
-        html.Div(id=f'vendor-{vendor_id}', className='vendor-anchor'),
+        html.Div(id=anchor_id, className='vendor-anchor'),
         html.Div([
             html.Div(slides, className='carousel-track'),
             html.Div(dots, className='carousel-dots'),
         ], className='vendor-carousel'),
     ], className='vendor-section')
+
+
+def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
+    """Genera el carrusel completo de un vendedor con slides por categoría."""
+    vendor_id = vendedor.lower().replace(' ', '-')
+    otros = [c for c in CATEGORIAS if c != 'CERVEZAS']
+
+    datos_cerv = get_datos_vendedor(df, vendedor, 'CERVEZAS')
+    resumen_cerv = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
+
+    otros_resumenes = [
+        (NOMBRES_CATEGORIA.get(cat, cat), get_resumen_vendedor(df, vendedor, cat))
+        for cat in otros
+    ]
+
+    slides = [
+        _crear_slide_cervezas(datos_cerv, resumen_cerv),
+        _crear_slide_otros(otros_resumenes),
+    ]
+
+    return _crear_carrusel(slides, f'vendor-{vendor_id}')
+
+
+def _crear_seccion_agregada(datos_fn, resumen_fn, anchor_id):
+    """Genera un carrusel con datos agregados (sucursal, supervisor, etc.)."""
+    otros = [c for c in CATEGORIAS if c != 'CERVEZAS']
+
+    datos_cerv = datos_fn('CERVEZAS')
+    resumen_cerv = resumen_fn('CERVEZAS')
+
+    otros_resumenes = [
+        (NOMBRES_CATEGORIA.get(cat, cat), resumen_fn(cat))
+        for cat in otros
+    ]
+
+    slides = [
+        _crear_slide_cervezas(datos_cerv, resumen_cerv),
+        _crear_slide_otros(otros_resumenes),
+    ]
+
+    return _crear_carrusel(slides, anchor_id)
+
+
+def _crear_bloque(titulo, carrusel, pct, css_class):
+    """Crea un bloque con título + % + carrusel."""
+    return html.Div([
+        html.H5(
+            [titulo, html.Span(f'  {pct}%', className='vendor-pct')],
+            className=f'vendor-name {css_class}-name',
+        ),
+        carrusel,
+    ], className=f'vendor-block {css_class}-block')
+
+
+def _crear_seccion_sucursal(df, sucursal):
+    """Genera el bloque con totales de la sucursal."""
+    nombre = sucursal.split(' - ', 1)[1] if ' - ' in sucursal else sucursal
+    resumen = get_resumen_sucursal(df, sucursal)
+    carrusel = _crear_seccion_agregada(
+        datos_fn=lambda cat: get_datos_sucursal(df, sucursal, cat),
+        resumen_fn=lambda cat: get_resumen_sucursal(df, sucursal, cat),
+        anchor_id=f'sucursal-{sucursal.split(" - ")[0]}',
+    )
+    return _crear_bloque(nombre, carrusel, resumen['pct_tendencia'], 'sucursal')
+
+
+def _crear_seccion_supervisor(df, supervisor, sucursal):
+    """Genera el bloque con totales de un supervisor."""
+    resumen = get_resumen_supervisor(df, supervisor, sucursal)
+    carrusel = _crear_seccion_agregada(
+        datos_fn=lambda cat: get_datos_supervisor(df, supervisor, sucursal, cat),
+        resumen_fn=lambda cat: get_resumen_supervisor(df, supervisor, sucursal, cat),
+        anchor_id=f'supervisor-{supervisor.lower().replace(" ", "-")}',
+    )
+    return _crear_bloque(supervisor, carrusel, resumen['pct_tendencia'], 'supervisor')
 
 
 def _crear_indice_vendedores(vendedores):
@@ -158,6 +223,10 @@ def register_callbacks(df):
     def actualizar_dashboard(vendedor, supervisor, sucursal, desplegar_todos):
         mostrar_todos = 'todos' in (desplegar_todos or [])
 
+        # Totales de jerarquía: sucursal y supervisor
+        seccion_suc = _crear_seccion_sucursal(df, sucursal) if sucursal else None
+        seccion_sup = _crear_seccion_supervisor(df, supervisor, sucursal) if supervisor else None
+
         if mostrar_todos:
             vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal)
             if not vendedores:
@@ -175,9 +244,12 @@ def register_callbacks(df):
                     _crear_seccion_vendedor(df, v, con_anchor=True),
                 ], className='vendor-block'))
 
-            return html.Div([indice, *secciones])
+            parts = [s for s in [seccion_suc, seccion_sup, indice] if s is not None]
+            return html.Div([*parts, *secciones])
 
         if not vendedor:
             return html.Div('Seleccione un vendedor', className='empty-state')
 
-        return _crear_seccion_vendedor(df, vendedor)
+        parts = [s for s in [seccion_suc, seccion_sup] if s is not None]
+        parts.append(_crear_seccion_vendedor(df, vendedor))
+        return html.Div(parts)

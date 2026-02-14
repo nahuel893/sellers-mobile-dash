@@ -80,6 +80,9 @@ NORMALIZAR_VENDEDOR = {
     'SUB DISTRIBUIDORES': 'SUB DISTRIBUIDOR',
 }
 
+# Vendedores a excluir (aparecen en dim_cliente pero no son preventistas)
+VENDEDORES_EXCLUIR = []
+
 # --- Parámetros temporales (se calcularán dinámicamente después) ---
 DIAS_HABILES = 24
 DIAS_TRANSCURRIDOS = 11

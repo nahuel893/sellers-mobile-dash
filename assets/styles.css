@@ -400,6 +400,33 @@ body {
     scroll-margin-top: 60px;
 }
 
+/* --- Sucursal Block --- */
+.sucursal-block {
+    background: linear-gradient(135deg, #e8eaf6 0%, #f0f2f5 100%);
+    border-top: 3px solid #1a1a2e !important;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+}
+
+.sucursal-name {
+    color: #1a1a2e;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+/* --- Supervisor Block --- */
+.supervisor-block {
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f2f5 100%);
+    border-top: 2px solid #6c757d !important;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+}
+
+.supervisor-name {
+    color: #16213e;
+    font-size: 1rem;
+}
+
 /* ============================================================
    RESPONSIVE BREAKPOINTS
    ============================================================ */

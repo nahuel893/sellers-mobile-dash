@@ -131,12 +131,21 @@ def get_dataframe():
             cupos_total = df_cupos[df_cupos['grupo_marca'] == 'TOTAL_CERVEZAS'].copy()
             cupos_marcas = df_cupos[df_cupos['grupo_marca'] != 'TOTAL_CERVEZAS'].copy()
 
+            # Rellenar None/NaN con sentinel para que el merge matchee
+            # (pandas no considera NaN == NaN en merges)
+            _SENTINEL = '__NONE__'
+            df_ventas['grupo_marca'] = df_ventas['grupo_marca'].fillna(_SENTINEL)
+            cupos_marcas['grupo_marca'] = cupos_marcas['grupo_marca'].fillna(_SENTINEL)
+
             merge_keys = ['vendedor', 'sucursal', 'categoria', 'grupo_marca']
             df = df_ventas.merge(
                 cupos_marcas[['vendedor', 'sucursal', 'supervisor', 'categoria', 'grupo_marca', 'cupo']],
                 on=merge_keys,
                 how='left',
             )
+
+            # Restaurar None y rellenar faltantes
+            df['grupo_marca'] = df['grupo_marca'].replace(_SENTINEL, None)
             df['cupo'] = df['cupo'].fillna(0).astype(int)
             df['supervisor'] = df['supervisor'].fillna('SIN SUPERVISOR')
 
