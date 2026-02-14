@@ -1,6 +1,24 @@
 """Componente header con título, fecha y días."""
+import locale
+from datetime import date
+
 from dash import html
 from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
+
+# Intentar locale español para formato de fecha
+try:
+    locale.setlocale(locale.LC_TIME, 'es_AR.UTF-8')
+except locale.Error:
+    try:
+        locale.setlocale(locale.LC_TIME, 'Spanish_Argentina')
+    except locale.Error:
+        pass  # Queda en inglés si no hay locale español
+
+
+def _fecha_header():
+    """Retorna la fecha formateada para el header."""
+    hoy = date.today()
+    return hoy.strftime('%A, %d de %B de %Y').capitalize()
 
 
 def crear_header():
@@ -9,7 +27,7 @@ def crear_header():
         html.Div(id='top'),
         html.H4('Avance Preventa', className='header-title'),
         html.Div([
-            html.Span('Viernes, 13 de febrero de 2026', className='header-date'),
+            html.Span(_fecha_header(), className='header-date'),
         ]),
         html.Div([
             html.Div([

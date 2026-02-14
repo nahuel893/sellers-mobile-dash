@@ -83,10 +83,35 @@ NORMALIZAR_VENDEDOR = {
 # Vendedores a excluir (aparecen en dim_cliente pero no son preventistas)
 VENDEDORES_EXCLUIR = []
 
-# --- Parámetros temporales (se calcularán dinámicamente después) ---
-DIAS_HABILES = 24
-DIAS_TRANSCURRIDOS = 11
-DIAS_RESTANTES = 13
+# --- Parámetros temporales (calculados dinámicamente) ---
+from datetime import date
+
+def _calcular_dias_habiles_mes():
+    """Calcula días hábiles (L-V) del mes actual y transcurridos hasta hoy."""
+    hoy = date.today()
+    primer_dia = hoy.replace(day=1)
+    # Último día del mes
+    if hoy.month == 12:
+        ultimo_dia = date(hoy.year + 1, 1, 1).replace(day=1)
+    else:
+        ultimo_dia = date(hoy.year, hoy.month + 1, 1)
+    from datetime import timedelta
+    ultimo_dia = ultimo_dia - timedelta(days=1)
+
+    habiles_total = 0
+    habiles_transcurridos = 0
+    dia = primer_dia
+    while dia <= ultimo_dia:
+        if dia.weekday() < 5:  # Lunes=0 a Viernes=4
+            habiles_total += 1
+            if dia <= hoy:
+                habiles_transcurridos += 1
+        dia += timedelta(days=1)
+
+    return habiles_total, habiles_transcurridos
+
+DIAS_HABILES, DIAS_TRANSCURRIDOS = _calcular_dias_habiles_mes()
+DIAS_RESTANTES = DIAS_HABILES - DIAS_TRANSCURRIDOS
 
 # --- Colores de performance ---
 COLOR_VERDE = '#4CAF50'
