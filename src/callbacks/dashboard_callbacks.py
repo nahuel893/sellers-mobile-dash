@@ -334,6 +334,14 @@ def register_callbacks(df):
         return html.Div(parts)
 
 
+def _crear_back_link(href, text='Volver'):
+    """Link de navegación hacia atrás."""
+    return html.Div(
+        dcc.Link(f'< {text}', href=href, className='back-link'),
+        className='back-link-container',
+    )
+
+
 def _render_vendedor_page(df, vendedor):
     """Vista directa de un vendedor (sin filtros)."""
     datos = get_datos_vendedor(df, vendedor, 'CERVEZAS')
@@ -342,6 +350,7 @@ def _render_vendedor_page(df, vendedor):
 
     resumen = get_resumen_vendedor(df, vendedor)
     return html.Div([
+        _crear_back_link('/'),
         html.H5(
             [vendedor, html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct')],
             className='vendor-name',
@@ -360,12 +369,16 @@ def _render_supervisor_page(df, supervisor, sucursal=None):
     indice = _crear_indice_vendedores(vendedores)
     secciones = [_crear_bloque_vendedor(df, v) for v in vendedores]
 
-    return html.Div([seccion_sup, indice, *secciones])
+    back_href = '/'
+    if sucursal:
+        suc_id = sucursal.split(' - ')[0]
+        back_href = f'/sucursal/{suc_id}'
+
+    return html.Div([_crear_back_link(back_href), seccion_sup, indice, *secciones])
 
 
 def _render_sucursal_page(df, sucursal_param):
     """Vista de sucursal: total + supervisores con resumen."""
-    # Buscar sucursal que matchee por ID o nombre completo
     sucursales = get_sucursales(df)
     sucursal = None
     for s in sucursales:
@@ -382,4 +395,4 @@ def _render_sucursal_page(df, sucursal_param):
     for sup in supervisores:
         secciones.append(_crear_seccion_supervisor(df, sup, sucursal))
 
-    return html.Div([seccion_suc, *secciones])
+    return html.Div([_crear_back_link('/'), seccion_suc, *secciones])

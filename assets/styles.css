@@ -414,6 +414,22 @@ body {
     color: inherit;
 }
 
+/* --- Back Link --- */
+.back-link-container {
+    padding: 10px 16px 4px;
+}
+
+.back-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
 /* --- Sucursal Block --- */
 .sucursal-block {
     background: linear-gradient(135deg, #e8eaf6 0%, #f0f2f5 100%);
