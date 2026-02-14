@@ -366,6 +366,17 @@ body {
     text-decoration: none;
 }
 
+.index-link-top {
+    background: #1a1a2e;
+    color: white;
+    border-color: #1a1a2e;
+}
+
+.index-link-top:hover {
+    background: #16213e;
+    border-color: #16213e;
+}
+
 .vendor-block {
     border-top: 2px solid #dee2e6;
     padding-top: 8px;

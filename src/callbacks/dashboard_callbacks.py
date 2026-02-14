@@ -201,7 +201,9 @@ def _crear_seccion_supervisor(df, supervisor, sucursal):
 
 def _crear_indice_vendedores(vendedores):
     """Barra de navegación rápida con links a cada vendedor."""
-    links = []
+    links = [
+        html.A('Inicio', href='#top', className='index-link index-link-top'),
+    ]
     for v in vendedores:
         vendor_id = v.lower().replace(' ', '-')
         links.append(

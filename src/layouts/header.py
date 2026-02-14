@@ -6,6 +6,7 @@ from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
 def crear_header():
     """Header del dashboard con info de días hábiles."""
     return html.Div([
+        html.Div(id='top'),
         html.H4('Avance Preventa', className='header-title'),
         html.Div([
             html.Span('Viernes, 13 de febrero de 2026', className='header-date'),
