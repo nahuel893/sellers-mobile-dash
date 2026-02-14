@@ -15,6 +15,16 @@ from src.layouts.gauges import crear_gauge_total, crear_ring_marca
 from src.layouts.filters import crear_filtros
 
 
+def _to_slug(nombre):
+    """Convierte nombre a slug URL-safe: 'FACUNDO CACERES' → 'FACUNDO-CACERES'."""
+    return nombre.strip().replace(' ', '-')
+
+
+def _from_slug(slug):
+    """Convierte slug a nombre: 'FACUNDO-CACERES' → 'FACUNDO CACERES'."""
+    return slug.replace('-', ' ')
+
+
 def _crear_slide_cervezas(datos, resumen):
     """Slide de cervezas: gauge total + detalle por marca."""
     gauge_total = crear_gauge_total(
@@ -181,10 +191,11 @@ def _crear_seccion_supervisor(df, supervisor, sucursal):
         resumen_fn=lambda cat: get_resumen_supervisor(df, supervisor, sucursal, cat),
         anchor_id=f'supervisor-{supervisor.lower().replace(" ", "-")}',
     )
-    suc_param = f'?sucursal={sucursal}' if sucursal else ''
+    suc_id = sucursal.split(' - ')[0] if sucursal else ''
+    suc_param = f'?sucursal={suc_id}' if suc_id else ''
     return _crear_bloque(
         supervisor, carrusel, resumen['pct_tendencia'], 'supervisor',
-        href=f'/supervisor/{supervisor}{suc_param}',
+        href=f'/supervisor/{_to_slug(supervisor)}{suc_param}',
     )
 
 
@@ -212,7 +223,7 @@ def _crear_bloque_vendedor(df, vendedor):
     ]
     return html.Div([
         html.H5(
-            dcc.Link(titulo_content, href=f'/vendedor/{vendedor}', className='nav-link-title'),
+            dcc.Link(titulo_content, href=f'/vendedor/{_to_slug(vendedor)}', className='nav-link-title'),
             className='vendor-name',
         ),
         _crear_seccion_vendedor(df, vendedor, con_anchor=True),
@@ -220,22 +231,22 @@ def _crear_bloque_vendedor(df, vendedor):
 
 
 def _parse_url(pathname):
-    """Parsea la URL y retorna (vista, param).
+    """Parsea la URL y retorna (vista, slug).
 
     Rutas soportadas:
-        /                           → ('home', None)
-        /vendedor/<nombre>          → ('vendedor', nombre)
-        /supervisor/<nombre>?suc=X  → ('supervisor', nombre)
-        /sucursal/<id>              → ('sucursal', id_string)
+        /                              → ('home', None)
+        /vendedor/FACUNDO-CACERES      → ('vendedor', 'FACUNDO-CACERES')
+        /supervisor/GFLORES?sucursal=1 → ('supervisor', 'GFLORES')
+        /sucursal/1                    → ('sucursal', '1')
     """
     if not pathname or pathname == '/':
         return 'home', None
     parts = [p for p in pathname.strip('/').split('/') if p]
     if len(parts) == 2:
         vista = parts[0].lower()
-        param = unquote(parts[1])
+        slug = unquote(parts[1])
         if vista in ('vendedor', 'supervisor', 'sucursal'):
-            return vista, param
+            return vista, slug
     return 'home', None
 
 
@@ -259,16 +270,17 @@ def register_callbacks(df):
             ])
 
         if vista == 'vendedor':
-            return _render_vendedor_page(df, param)
+            return _render_vendedor_page(df, _from_slug(param))
 
         if vista == 'supervisor':
-            # Extraer ?sucursal=X del query string
+            # Extraer ?sucursal=<id> del query string
             sucursal = None
             if search:
                 for part in search.lstrip('?').split('&'):
                     if part.startswith('sucursal='):
-                        sucursal = unquote(part.split('=', 1)[1])
-            return _render_supervisor_page(df, param, sucursal)
+                        suc_id = unquote(part.split('=', 1)[1])
+                        sucursal = _find_sucursal(df, suc_id)
+            return _render_supervisor_page(df, _from_slug(param), sucursal)
 
         if vista == 'sucursal':
             return _render_sucursal_page(df, param)
@@ -342,6 +354,14 @@ def _crear_back_link(href, text='Volver'):
     )
 
 
+def _find_sucursal(df, suc_id):
+    """Busca sucursal por ID numérico. Retorna string completo o None."""
+    for s in get_sucursales(df):
+        if s.split(' - ')[0] == str(suc_id):
+            return s
+    return None
+
+
 def _render_vendedor_page(df, vendedor):
     """Vista directa de un vendedor (sin filtros)."""
     datos = get_datos_vendedor(df, vendedor, 'CERVEZAS')
@@ -379,12 +399,7 @@ def _render_supervisor_page(df, supervisor, sucursal=None):
 
 def _render_sucursal_page(df, sucursal_param):
     """Vista de sucursal: total + supervisores con resumen."""
-    sucursales = get_sucursales(df)
-    sucursal = None
-    for s in sucursales:
-        if s.startswith(f'{sucursal_param} - ') or s == sucursal_param:
-            sucursal = s
-            break
+    sucursal = _find_sucursal(df, sucursal_param)
     if not sucursal:
         return html.Div(f'Sucursal "{sucursal_param}" no encontrada', className='empty-state')
 
