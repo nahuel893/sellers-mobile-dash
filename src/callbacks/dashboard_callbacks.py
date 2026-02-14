@@ -223,30 +223,15 @@ def _crear_indice_vendedores(vendedores):
 def _crear_bloque_vendedor(df, vendedor):
     """Crea un bloque de vendedor con nombre-link + carrusel."""
     resumen = get_resumen_vendedor(df, vendedor)
-    # Obtener sucursal para link al mapa
-    vendor_data = df[df['vendedor'] == vendedor]
-    suc_id = ''
-    if not vendor_data.empty:
-        suc = str(vendor_data.iloc[0]['sucursal'])
-        suc_id = suc.split(' - ')[0] if ' - ' in suc else ''
-
     titulo_content = [
         vendedor,
         html.Span(f'  {resumen["pct_tendencia"]:.1f}%', className='vendor-pct'),
     ]
-    mapa_link = dcc.Link(
-        'Ver Mapa',
-        href=f'/mapa/{_to_slug(vendedor)}?sucursal={suc_id}',
-        className='mapa-btn',
-    )
     return html.Div([
-        html.Div([
-            html.H5(
-                dcc.Link(titulo_content, href=f'/vendedor/{_to_slug(vendedor)}', className='nav-link-title'),
-                className='vendor-name',
-            ),
-            mapa_link,
-        ], className='vendor-header-row'),
+        html.H5(
+            dcc.Link(titulo_content, href=f'/vendedor/{_to_slug(vendedor)}', className='nav-link-title'),
+            className='vendor-name',
+        ),
         _crear_seccion_vendedor(df, vendedor, con_anchor=True),
     ], className='vendor-block')
 
