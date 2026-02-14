@@ -354,8 +354,22 @@ def _find_sucursal(df, suc_id):
     return None
 
 
+def _crear_vista_scrollable(df, vendedor):
+    """Todas las categorías apiladas verticalmente (sin carrusel)."""
+    datos_cerv = get_datos_vendedor(df, vendedor, 'CERVEZAS')
+    resumen_cerv = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
+
+    secciones = [_crear_slide_cervezas(datos_cerv, resumen_cerv)]
+    for cat in [c for c in CATEGORIAS if c != 'CERVEZAS']:
+        nombre = NOMBRES_CATEGORIA.get(cat, cat)
+        resumen = get_resumen_vendedor(df, vendedor, cat)
+        secciones.append(_crear_slide_otros([(nombre, resumen)]))
+
+    return html.Div(secciones, className='vendor-scrollable')
+
+
 def _render_vendedor_page(df, vendedor):
-    """Vista directa de un vendedor (sin filtros)."""
+    """Vista directa de un vendedor: scrollable, todas las categorías visibles."""
     datos = get_datos_vendedor(df, vendedor, 'CERVEZAS')
     if datos.empty:
         return html.Div(f'Vendedor "{vendedor}" no encontrado', className='empty-state')
@@ -367,7 +381,7 @@ def _render_vendedor_page(df, vendedor):
             [vendedor, html.Span(f'  {resumen["pct_tendencia"]:.1f}%', className='vendor-pct')],
             className='vendor-name',
         ),
-        _crear_seccion_vendedor(df, vendedor),
+        _crear_vista_scrollable(df, vendedor),
     ], className='vendor-block')
 
 

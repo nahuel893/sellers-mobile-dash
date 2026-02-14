@@ -483,6 +483,13 @@ body {
     scroll-margin-top: 200px;
 }
 
+/* Scrollable vendor view: slides stacked vertically */
+.vendor-scrollable .carousel-slide {
+    min-width: auto;
+    width: auto;
+    scroll-snap-align: unset;
+}
+
 /* --- Navigation Links --- */
 .nav-link-title {
     color: inherit;
