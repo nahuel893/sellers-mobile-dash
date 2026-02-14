@@ -192,6 +192,22 @@ def _crear_seccion_supervisor(df, supervisor, sucursal):
     )
 
 
+def _crear_category_toggle():
+    """Botones pill para cambiar todos los carruseles a la misma categoría."""
+    nombres = ['Cervezas'] + [
+        NOMBRES_CATEGORIA.get(cat, cat)
+        for cat in CATEGORIAS if cat != 'CERVEZAS'
+    ]
+    buttons = []
+    for i, nombre in enumerate(nombres):
+        cls = 'category-btn active' if i == 0 else 'category-btn'
+        buttons.append(html.Button(
+            nombre, className=cls,
+            **{'data-slide': str(i)},
+        ))
+    return html.Div(buttons, className='category-toggle')
+
+
 def _crear_indice_vendedores(vendedores):
     """Barra de navegación rápida con links a cada vendedor."""
     links = [
@@ -262,6 +278,7 @@ def register_callbacks(df):
             return html.Div([
                 html.Div([
                     crear_filtros(sucursales),
+                    _crear_category_toggle(),
                     html.Div(id='sidebar-index'),
                 ], className='sidebar-panel'),
                 html.Div(id='dashboard-content', className='main-content'),
@@ -372,6 +389,7 @@ def _render_supervisor_page(df, supervisor, sucursal=None):
     return html.Div([
         html.Div([
             _crear_back_link(back_href),
+            _crear_category_toggle(),
             indice,
         ], className='sidebar-panel'),
         html.Div([seccion_sup, *secciones], className='main-content'),
@@ -391,7 +409,12 @@ def _render_sucursal_page(df, sucursal_param):
     for sup in supervisores:
         secciones.append(_crear_seccion_supervisor(df, sup, sucursal))
 
-    return html.Div([_crear_back_link('/'), seccion_suc, *secciones])
+    return html.Div([
+        _crear_back_link('/'),
+        _crear_category_toggle(),
+        seccion_suc,
+        *secciones,
+    ])
 
 
 def _render_mapa_page(df, vendedor, search=None):

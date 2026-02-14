@@ -383,6 +383,38 @@ body {
     font-size: 0.82rem;
 }
 
+/* --- Category Toggle (global slide switcher) --- */
+.category-toggle {
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px;
+    justify-content: center;
+}
+
+.category-btn {
+    padding: 6px 14px;
+    border: 1.5px solid #dee2e6;
+    border-radius: 20px;
+    background: white;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+}
+
+.category-btn:hover {
+    border-color: #1a1a2e;
+    color: #1a1a2e;
+}
+
+.category-btn.active {
+    background: #1a1a2e;
+    color: white;
+    border-color: #1a1a2e;
+}
+
 /* --- Vendor Index (desplegar todos) --- */
 .vendor-index {
     display: flex;

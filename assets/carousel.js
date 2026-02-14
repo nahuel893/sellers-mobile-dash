@@ -1,5 +1,5 @@
 /**
- * Carousel: dot tracking + dot click navigation.
+ * Carousel: dot tracking, dot click navigation, global category toggle.
  */
 
 /* --- Scroll event: update active dot --- */
@@ -37,5 +37,31 @@ document.addEventListener('click', function(e) {
     track.scrollTo({
         left: index * track.offsetWidth,
         behavior: 'smooth'
+    });
+});
+
+/* --- Category toggle: scroll ALL carousels to the same slide --- */
+document.addEventListener('click', function(e) {
+    if (!e.target.classList || !e.target.classList.contains('category-btn')) return;
+
+    var slideIndex = parseInt(e.target.getAttribute('data-slide'), 10);
+
+    // Update active button state on ALL toggles
+    document.querySelectorAll('.category-toggle').forEach(function(toggle) {
+        toggle.querySelectorAll('.category-btn').forEach(function(btn) {
+            if (parseInt(btn.getAttribute('data-slide'), 10) === slideIndex) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    });
+
+    // Scroll ALL carousel tracks to target slide
+    document.querySelectorAll('.carousel-track').forEach(function(track) {
+        track.scrollTo({
+            left: slideIndex * track.offsetWidth,
+            behavior: 'smooth'
+        });
     });
 });
