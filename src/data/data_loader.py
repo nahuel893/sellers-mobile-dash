@@ -141,11 +141,12 @@ def get_dataframe():
             df = df_ventas.merge(
                 cupos_marcas[['vendedor', 'sucursal', 'supervisor', 'categoria', 'grupo_marca', 'cupo']],
                 on=merge_keys,
-                how='left',
+                how='outer',
             )
 
             # Restaurar None y rellenar faltantes
             df['grupo_marca'] = df['grupo_marca'].replace(_SENTINEL, None)
+            df['ventas'] = df['ventas'].fillna(0)
             df['cupo'] = df['cupo'].fillna(0).astype(int)
             df['supervisor'] = df['supervisor'].fillna('SIN SUPERVISOR')
 

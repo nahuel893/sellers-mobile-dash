@@ -1,6 +1,8 @@
 """
 Capa de negocio: cálculos de tendencia, filtros y agregaciones.
 """
+import pandas as pd
+
 from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
 
 
@@ -95,6 +97,11 @@ def get_resumen_supervisor(df, supervisor, sucursal=None, categoria='CERVEZAS'):
 def _agregar_por_grupo_marca(df, mask, categoria):
     """Agrega ventas/cupo por grupo_marca y recalcula métricas derivadas."""
     datos = df[mask].copy()
+    if datos.empty:
+        return pd.DataFrame(columns=[
+            'grupo_marca', 'ventas', 'cupo', 'categoria',
+            'falta', 'tendencia', 'pct_tendencia',
+        ])
     agg = datos.groupby('grupo_marca', as_index=False, dropna=False).agg({
         'ventas': 'sum',
         'cupo': 'sum',
