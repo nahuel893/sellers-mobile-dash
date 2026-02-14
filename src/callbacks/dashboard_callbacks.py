@@ -110,7 +110,7 @@ def _crear_carrusel(slides, anchor_id):
 
 def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
     """Genera el carrusel completo de un vendedor con slides por categoría."""
-    vendor_id = vendedor.lower().replace(' ', '-')
+    vendor_id = _to_slug(vendedor).lower()
     otros = [c for c in CATEGORIAS if c != 'CERVEZAS']
 
     datos_cerv = get_datos_vendedor(df, vendedor, 'CERVEZAS')
@@ -190,7 +190,7 @@ def _crear_seccion_supervisor(df, supervisor, sucursal):
     carrusel = _crear_seccion_agregada(
         datos_fn=lambda cat: get_datos_supervisor(df, supervisor, sucursal, cat),
         resumen_fn=lambda cat: get_resumen_supervisor(df, supervisor, sucursal, cat),
-        anchor_id=f'supervisor-{supervisor.lower().replace(" ", "-")}',
+        anchor_id=f'supervisor-{_to_slug(supervisor).lower()}',
     )
     suc_id = sucursal.split(' - ')[0] if sucursal else ''
     suc_param = f'?sucursal={suc_id}' if suc_id else ''
@@ -206,7 +206,7 @@ def _crear_indice_vendedores(vendedores):
         html.A('Inicio', href='#top', className='index-link index-link-top'),
     ]
     for v in vendedores:
-        vendor_id = v.lower().replace(' ', '-')
+        vendor_id = _to_slug(v).lower()
         links.append(
             html.A(
                 v.split(' ')[0],
