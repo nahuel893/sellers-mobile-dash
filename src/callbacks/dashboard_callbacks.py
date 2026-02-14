@@ -13,6 +13,7 @@ from src.services.ventas_service import (
 )
 from src.layouts.gauges import crear_gauge_total, crear_ring_marca
 from src.layouts.filters import crear_filtros
+from src.layouts.mapa import crear_mapa
 
 
 def _to_slug(nombre):
@@ -219,15 +220,30 @@ def _crear_indice_vendedores(vendedores):
 def _crear_bloque_vendedor(df, vendedor):
     """Crea un bloque de vendedor con nombre-link + carrusel."""
     resumen = get_resumen_vendedor(df, vendedor)
+    # Obtener sucursal para link al mapa
+    vendor_data = df[df['vendedor'] == vendedor]
+    suc_id = ''
+    if not vendor_data.empty:
+        suc = str(vendor_data.iloc[0]['sucursal'])
+        suc_id = suc.split(' - ')[0] if ' - ' in suc else ''
+
     titulo_content = [
         vendedor,
         html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct'),
     ]
+    mapa_link = dcc.Link(
+        'Ver Mapa',
+        href=f'/mapa/{_to_slug(vendedor)}?sucursal={suc_id}',
+        className='mapa-btn',
+    )
     return html.Div([
-        html.H5(
-            dcc.Link(titulo_content, href=f'/vendedor/{_to_slug(vendedor)}', className='nav-link-title'),
-            className='vendor-name',
-        ),
+        html.Div([
+            html.H5(
+                dcc.Link(titulo_content, href=f'/vendedor/{_to_slug(vendedor)}', className='nav-link-title'),
+                className='vendor-name',
+            ),
+            mapa_link,
+        ], className='vendor-header-row'),
         _crear_seccion_vendedor(df, vendedor, con_anchor=True),
     ], className='vendor-block')
 
@@ -247,7 +263,7 @@ def _parse_url(pathname):
     if len(parts) == 2:
         vista = parts[0].lower()
         slug = unquote(parts[1])
-        if vista in ('vendedor', 'supervisor', 'sucursal'):
+        if vista in ('vendedor', 'supervisor', 'sucursal', 'mapa'):
             return vista, slug
     return 'home', None
 
@@ -289,6 +305,9 @@ def register_callbacks(df):
 
         if vista == 'sucursal':
             return _render_sucursal_page(df, param)
+
+        if vista == 'mapa':
+            return _render_mapa_page(df, _from_slug(param), search)
 
         return html.Div('Página no encontrada', className='empty-state')
 
@@ -396,3 +415,45 @@ def _render_sucursal_page(df, sucursal_param):
         secciones.append(_crear_seccion_supervisor(df, sup, sucursal))
 
     return html.Div([_crear_back_link('/'), seccion_suc, *secciones])
+
+
+def _render_mapa_page(df, vendedor, search=None):
+    """Vista de mapa con clientes asignados al vendedor."""
+    # Extraer sucursal del query string
+    id_sucursal = None
+    if search:
+        for part in search.lstrip('?').split('&'):
+            if part.startswith('sucursal='):
+                id_sucursal = unquote(part.split('=', 1)[1])
+
+    # Fallback: obtener sucursal del dataframe
+    if not id_sucursal:
+        vendor_data = df[df['vendedor'] == vendedor]
+        if not vendor_data.empty:
+            suc = str(vendor_data.iloc[0]['sucursal'])
+            id_sucursal = suc.split(' - ')[0] if ' - ' in suc else None
+
+    if not id_sucursal:
+        return html.Div([
+            _crear_back_link('/'),
+            html.Div(f'Vendedor "{vendedor}" no encontrado', className='empty-state'),
+        ])
+
+    try:
+        from src.data.db import get_connection
+        from src.data.queries import query_clientes_vendedor
+        conn = get_connection()
+        df_clientes = query_clientes_vendedor(conn, vendedor, id_sucursal)
+        conn.close()
+    except Exception:
+        return html.Div([
+            _crear_back_link('/'),
+            html.Div('Mapa no disponible sin conexión a BD', className='empty-state'),
+        ])
+
+    mapa = crear_mapa(df_clientes, vendedor)
+    return html.Div([
+        _crear_back_link('/'),
+        html.H5(f'Clientes de {vendedor}', className='vendor-name'),
+        mapa,
+    ])

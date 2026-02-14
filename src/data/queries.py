@@ -44,3 +44,29 @@ def query_ventas_mes(conn, fecha_desde, fecha_hasta):
         params={'fecha_desde': fecha_desde, 'fecha_hasta': fecha_hasta},
     )
     return df
+
+
+QUERY_CLIENTES_VENDEDOR = """
+SELECT
+    dc.razon_social,
+    dc.fantasia,
+    dc.latitud,
+    dc.longitud,
+    dc.des_localidad
+FROM gold.dim_cliente dc
+WHERE dc.des_personal_fv1 = %(vendedor)s
+  AND dc.id_sucursal = %(id_sucursal)s
+  AND dc.latitud IS NOT NULL
+  AND dc.longitud IS NOT NULL
+  AND dc.anulado = false
+ORDER BY dc.razon_social
+"""
+
+
+def query_clientes_vendedor(conn, vendedor, id_sucursal):
+    """Clientes asignados a un vendedor con coordenadas."""
+    return pd.read_sql_query(
+        QUERY_CLIENTES_VENDEDOR,
+        conn,
+        params={'vendedor': vendedor, 'id_sucursal': int(id_sucursal)},
+    )
