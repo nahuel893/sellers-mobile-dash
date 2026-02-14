@@ -138,13 +138,21 @@ def _crear_seccion_agregada(datos_fn, resumen_fn, anchor_id):
     return _crear_carrusel(slides, anchor_id)
 
 
-def _crear_bloque(titulo, carrusel, pct, css_class):
-    """Crea un bloque con título + % + carrusel."""
-    return html.Div([
-        html.H5(
-            [titulo, html.Span(f'  {pct}%', className='vendor-pct')],
+def _crear_bloque(titulo, carrusel, pct, css_class, href=None):
+    """Crea un bloque con título + % + carrusel. Si href, el título es un link."""
+    titulo_content = [titulo, html.Span(f'  {pct}%', className='vendor-pct')]
+    if href:
+        titulo_el = html.H5(
+            dcc.Link(titulo_content, href=href, className='nav-link-title'),
             className=f'vendor-name {css_class}-name',
-        ),
+        )
+    else:
+        titulo_el = html.H5(
+            titulo_content,
+            className=f'vendor-name {css_class}-name',
+        )
+    return html.Div([
+        titulo_el,
         carrusel,
     ], className=f'vendor-block {css_class}-block')
 
@@ -152,13 +160,17 @@ def _crear_bloque(titulo, carrusel, pct, css_class):
 def _crear_seccion_sucursal(df, sucursal):
     """Genera el bloque con totales de la sucursal."""
     nombre = sucursal.split(' - ', 1)[1] if ' - ' in sucursal else sucursal
+    suc_id = sucursal.split(' - ')[0]
     resumen = get_resumen_sucursal(df, sucursal)
     carrusel = _crear_seccion_agregada(
         datos_fn=lambda cat: get_datos_sucursal(df, sucursal, cat),
         resumen_fn=lambda cat: get_resumen_sucursal(df, sucursal, cat),
-        anchor_id=f'sucursal-{sucursal.split(" - ")[0]}',
+        anchor_id=f'sucursal-{suc_id}',
     )
-    return _crear_bloque(nombre, carrusel, resumen['pct_tendencia'], 'sucursal')
+    return _crear_bloque(
+        nombre, carrusel, resumen['pct_tendencia'], 'sucursal',
+        href=f'/sucursal/{suc_id}',
+    )
 
 
 def _crear_seccion_supervisor(df, supervisor, sucursal):
@@ -169,7 +181,11 @@ def _crear_seccion_supervisor(df, supervisor, sucursal):
         resumen_fn=lambda cat: get_resumen_supervisor(df, supervisor, sucursal, cat),
         anchor_id=f'supervisor-{supervisor.lower().replace(" ", "-")}',
     )
-    return _crear_bloque(supervisor, carrusel, resumen['pct_tendencia'], 'supervisor')
+    suc_param = f'?sucursal={sucursal}' if sucursal else ''
+    return _crear_bloque(
+        supervisor, carrusel, resumen['pct_tendencia'], 'supervisor',
+        href=f'/supervisor/{supervisor}{suc_param}',
+    )
 
 
 def _crear_indice_vendedores(vendedores):
@@ -185,6 +201,22 @@ def _crear_indice_vendedores(vendedores):
             )
         )
     return html.Div(links, className='vendor-index')
+
+
+def _crear_bloque_vendedor(df, vendedor):
+    """Crea un bloque de vendedor con nombre-link + carrusel."""
+    resumen = get_resumen_vendedor(df, vendedor)
+    titulo_content = [
+        vendedor,
+        html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct'),
+    ]
+    return html.Div([
+        html.H5(
+            dcc.Link(titulo_content, href=f'/vendedor/{vendedor}', className='nav-link-title'),
+            className='vendor-name',
+        ),
+        _crear_seccion_vendedor(df, vendedor, con_anchor=True),
+    ], className='vendor-block')
 
 
 def _parse_url(pathname):
@@ -289,16 +321,7 @@ def register_callbacks(df):
                 return html.Div('Sin vendedores', className='empty-state')
 
             indice = _crear_indice_vendedores(vendedores)
-            secciones = []
-            for v in vendedores:
-                resumen = get_resumen_vendedor(df, v)
-                secciones.append(html.Div([
-                    html.H5(
-                        [v, html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct')],
-                        className='vendor-name',
-                    ),
-                    _crear_seccion_vendedor(df, v, con_anchor=True),
-                ], className='vendor-block'))
+            secciones = [_crear_bloque_vendedor(df, v) for v in vendedores]
 
             parts = [s for s in [seccion_suc, seccion_sup, indice] if s is not None]
             return html.Div([*parts, *secciones])
@@ -335,17 +358,7 @@ def _render_supervisor_page(df, supervisor, sucursal=None):
 
     seccion_sup = _crear_seccion_supervisor(df, supervisor, sucursal)
     indice = _crear_indice_vendedores(vendedores)
-
-    secciones = []
-    for v in vendedores:
-        resumen = get_resumen_vendedor(df, v)
-        secciones.append(html.Div([
-            html.H5(
-                [v, html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct')],
-                className='vendor-name',
-            ),
-            _crear_seccion_vendedor(df, v, con_anchor=True),
-        ], className='vendor-block'))
+    secciones = [_crear_bloque_vendedor(df, v) for v in vendedores]
 
     return html.Div([seccion_sup, indice, *secciones])
 

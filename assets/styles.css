@@ -400,6 +400,20 @@ body {
     scroll-margin-top: 60px;
 }
 
+/* --- Navigation Links --- */
+.nav-link-title {
+    color: inherit;
+    text-decoration: none;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.nav-link-title:hover {
+    text-decoration: underline;
+    color: inherit;
+}
+
 /* --- Sucursal Block --- */
 .sucursal-block {
     background: linear-gradient(135deg, #e8eaf6 0%, #f0f2f5 100%);
