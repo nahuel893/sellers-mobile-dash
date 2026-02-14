@@ -229,7 +229,12 @@ def main():
     df_cupos['sucursal'] = df_cupos['id_sucursal'].map(lookup_suc)
 
     # Asignar supervisor desde lookup (vendedor → supervisor)
-    df_cupos['supervisor'] = df_cupos['vendedor'].str.upper().map(lookup_sup).fillna('SIN SUPERVISOR')
+    # Solo para Casa Central (suc 1): supervisores.xlsx solo tiene datos de CC
+    df_cupos['supervisor'] = 'SIN SUPERVISOR'
+    mask_cc = df_cupos['id_sucursal'] == 1
+    df_cupos.loc[mask_cc, 'supervisor'] = (
+        df_cupos.loc[mask_cc, 'vendedor'].str.upper().map(lookup_sup).fillna('SIN SUPERVISOR')
+    )
 
     # Ordenar y guardar
     df_cupos = df_cupos[['vendedor', 'sucursal', 'supervisor', 'categoria', 'grupo_marca', 'cupo']]
