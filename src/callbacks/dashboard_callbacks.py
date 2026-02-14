@@ -112,42 +112,31 @@ def _crear_carrusel(slides, anchor_id):
 
 
 def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
-    """Genera el carrusel completo de un vendedor con slides por categoría."""
+    """Genera el carrusel completo de un vendedor con 1 slide por categoría."""
     vendor_id = _to_slug(vendedor).lower()
-    otros = [c for c in CATEGORIAS if c != 'CERVEZAS']
 
     datos_cerv = get_datos_vendedor(df, vendedor, 'CERVEZAS')
     resumen_cerv = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
 
-    otros_resumenes = [
-        (NOMBRES_CATEGORIA.get(cat, cat), get_resumen_vendedor(df, vendedor, cat))
-        for cat in otros
-    ]
-
-    slides = [
-        _crear_slide_cervezas(datos_cerv, resumen_cerv),
-        _crear_slide_otros(otros_resumenes),
-    ]
+    slides = [_crear_slide_cervezas(datos_cerv, resumen_cerv)]
+    for cat in [c for c in CATEGORIAS if c != 'CERVEZAS']:
+        nombre = NOMBRES_CATEGORIA.get(cat, cat)
+        resumen = get_resumen_vendedor(df, vendedor, cat)
+        slides.append(_crear_slide_otros([(nombre, resumen)]))
 
     return _crear_carrusel(slides, f'vendor-{vendor_id}')
 
 
 def _crear_seccion_agregada(datos_fn, resumen_fn, anchor_id):
-    """Genera un carrusel con datos agregados (sucursal, supervisor, etc.)."""
-    otros = [c for c in CATEGORIAS if c != 'CERVEZAS']
-
+    """Genera un carrusel con datos agregados, 1 slide por categoría."""
     datos_cerv = datos_fn('CERVEZAS')
     resumen_cerv = resumen_fn('CERVEZAS')
 
-    otros_resumenes = [
-        (NOMBRES_CATEGORIA.get(cat, cat), resumen_fn(cat))
-        for cat in otros
-    ]
-
-    slides = [
-        _crear_slide_cervezas(datos_cerv, resumen_cerv),
-        _crear_slide_otros(otros_resumenes),
-    ]
+    slides = [_crear_slide_cervezas(datos_cerv, resumen_cerv)]
+    for cat in [c for c in CATEGORIAS if c != 'CERVEZAS']:
+        nombre = NOMBRES_CATEGORIA.get(cat, cat)
+        resumen = resumen_fn(cat)
+        slides.append(_crear_slide_otros([(nombre, resumen)]))
 
     return _crear_carrusel(slides, anchor_id)
 
