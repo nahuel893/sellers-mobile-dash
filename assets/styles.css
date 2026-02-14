@@ -22,7 +22,7 @@ body {
     padding: 0 !important;
     background-color: #f0f2f5;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 /* --- Header --- */
@@ -344,11 +344,6 @@ body {
     flex-wrap: wrap;
     gap: 6px;
     padding: 10px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: #f0f2f5;
-    border-bottom: 1px solid #dee2e6;
 }
 
 .index-link {
@@ -397,7 +392,7 @@ body {
 }
 
 .vendor-anchor {
-    scroll-margin-top: 60px;
+    scroll-margin-top: 200px;
 }
 
 /* --- Navigation Links --- */
@@ -428,6 +423,25 @@ body {
 
 .back-link:hover {
     text-decoration: underline;
+}
+
+/* --- Dashboard Layout (sidebar + content) --- */
+.dashboard-layout {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-panel {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f0f2f5;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.main-content {
+    flex: 1;
+    min-width: 0;
 }
 
 /* --- Sucursal Block --- */
@@ -538,9 +552,31 @@ body {
         min-width: 110px;
     }
 
+    /* Sidebar layout */
+    .dashboard-layout {
+        flex-direction: row;
+    }
+
+    .sidebar-panel {
+        width: 140px;
+        flex-shrink: 0;
+        align-self: flex-start;
+        max-height: 100vh;
+        overflow-y: auto;
+        border-bottom: none;
+        border-right: 1px solid #dee2e6;
+    }
+
     .filters-section {
-        padding: 16px 32px 8px;
-        max-width: 500px;
+        padding: 16px 16px 8px;
+    }
+
+    .filters-row {
+        flex-direction: column;
+    }
+
+    .vendor-anchor {
+        scroll-margin-top: 80px;
     }
 
     .section-total {

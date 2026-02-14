@@ -265,9 +265,12 @@ def register_callbacks(df):
         if vista == 'home':
             sucursales = get_sucursales(df)
             return html.Div([
-                crear_filtros(sucursales),
-                html.Div(id='dashboard-content'),
-            ])
+                html.Div([
+                    crear_filtros(sucursales),
+                    html.Div(id='sidebar-index'),
+                ], className='sidebar-panel'),
+                html.Div(id='dashboard-content', className='main-content'),
+            ], className='dashboard-layout')
 
         if vista == 'vendedor':
             return _render_vendedor_page(df, _from_slug(param))
@@ -298,52 +301,26 @@ def register_callbacks(df):
         return options, supervisores[0] if supervisores else None
 
     @callback(
-        Output('dropdown-vendedor', 'options'),
-        Output('dropdown-vendedor', 'value'),
-        Output('dropdown-vendedor', 'disabled'),
-        Input('dropdown-supervisor', 'value'),
-        Input('dropdown-sucursal', 'value'),
-        Input('check-desplegar-todos', 'value'),
-    )
-    def actualizar_vendedores(supervisor, sucursal, desplegar_todos):
-        if not supervisor:
-            return [], None, False
-        vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal)
-        options = [{'label': v, 'value': v} for v in vendedores]
-        disabled = 'todos' in (desplegar_todos or [])
-        return options, vendedores[0] if vendedores else None, disabled
-
-    @callback(
         Output('dashboard-content', 'children'),
-        Input('dropdown-vendedor', 'value'),
+        Output('sidebar-index', 'children'),
         Input('dropdown-supervisor', 'value'),
         Input('dropdown-sucursal', 'value'),
-        Input('check-desplegar-todos', 'value'),
     )
-    def actualizar_dashboard(vendedor, supervisor, sucursal, desplegar_todos):
-        mostrar_todos = 'todos' in (desplegar_todos or [])
-
+    def actualizar_dashboard(supervisor, sucursal):
         # Totales de jerarquía: sucursal y supervisor
         seccion_suc = _crear_seccion_sucursal(df, sucursal) if sucursal else None
         seccion_sup = _crear_seccion_supervisor(df, supervisor, sucursal) if supervisor else None
 
-        if mostrar_todos:
-            vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal)
-            if not vendedores:
-                return html.Div('Sin vendedores', className='empty-state')
+        vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal) if supervisor else []
+        if not vendedores:
+            parts = [s for s in [seccion_suc, seccion_sup] if s is not None]
+            return html.Div(parts) if parts else html.Div('Sin vendedores', className='empty-state'), None
 
-            indice = _crear_indice_vendedores(vendedores)
-            secciones = [_crear_bloque_vendedor(df, v) for v in vendedores]
-
-            parts = [s for s in [seccion_suc, seccion_sup, indice] if s is not None]
-            return html.Div([*parts, *secciones])
-
-        if not vendedor:
-            return html.Div('Seleccione un vendedor', className='empty-state')
+        indice = _crear_indice_vendedores(vendedores)
+        secciones = [_crear_bloque_vendedor(df, v) for v in vendedores]
 
         parts = [s for s in [seccion_suc, seccion_sup] if s is not None]
-        parts.append(_crear_seccion_vendedor(df, vendedor))
-        return html.Div(parts)
+        return html.Div([*parts, *secciones]), indice
 
 
 def _crear_back_link(href, text='Volver'):
@@ -394,7 +371,13 @@ def _render_supervisor_page(df, supervisor, sucursal=None):
         suc_id = sucursal.split(' - ')[0]
         back_href = f'/sucursal/{suc_id}'
 
-    return html.Div([_crear_back_link(back_href), seccion_sup, indice, *secciones])
+    return html.Div([
+        html.Div([
+            _crear_back_link(back_href),
+            indice,
+        ], className='sidebar-panel'),
+        html.Div([seccion_sup, *secciones], className='main-content'),
+    ], className='dashboard-layout')
 
 
 def _render_sucursal_page(df, sucursal_param):

@@ -1,10 +1,9 @@
 """Componente de filtros (dropdowns)."""
 from dash import html, dcc
-import dash_bootstrap_components as dbc
 
 
 def crear_filtros(sucursales):
-    """Dropdowns de sucursal, supervisor y vendedor + checkbox desplegar todos."""
+    """Dropdowns de sucursal y supervisor."""
     return html.Div([
         html.Div([
             html.Div([
@@ -25,20 +24,5 @@ def crear_filtros(sucursales):
                     className='filter-dropdown',
                 ),
             ], className='filter-group'),
-            html.Div([
-                html.Label('Vendedor', className='filter-label'),
-                dcc.Dropdown(
-                    id='dropdown-vendedor',
-                    clearable=False,
-                    className='filter-dropdown',
-                ),
-            ], className='filter-group'),
         ], className='filters-row'),
-        dbc.Checklist(
-            id='check-desplegar-todos',
-            options=[{'label': '  Desplegar todos', 'value': 'todos'}],
-            value=[],
-            className='check-todos',
-            switch=True,
-        ),
     ], className='filters-section')
