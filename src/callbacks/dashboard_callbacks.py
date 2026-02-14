@@ -1,5 +1,8 @@
 """Callbacks del dashboard principal."""
+import logging
 from urllib.parse import unquote
+
+logger = logging.getLogger(__name__)
 
 from dash import html, dcc, callback, Input, Output
 import dash_bootstrap_components as dbc
@@ -443,12 +446,21 @@ def _render_mapa_page(df, vendedor, search=None):
         from src.data.db import get_connection
         from src.data.queries import query_clientes_vendedor
         conn = get_connection()
-        df_clientes = query_clientes_vendedor(conn, vendedor, id_sucursal)
-        conn.close()
-    except Exception:
+        try:
+            df_clientes = query_clientes_vendedor(conn, vendedor, id_sucursal)
+        finally:
+            conn.close()
+    except ImportError:
+        logger.warning('Módulo de BD no disponible para mapa')
         return html.Div([
             _crear_back_link('/'),
-            html.Div('Mapa no disponible sin conexión a BD', className='empty-state'),
+            html.Div('Mapa no disponible (módulo de BD no instalado)', className='empty-state'),
+        ])
+    except Exception as e:
+        logger.error('Error cargando mapa para %s (suc %s): %s', vendedor, id_sucursal, e)
+        return html.Div([
+            _crear_back_link('/'),
+            html.Div('Error al cargar el mapa. Intente nuevamente.', className='empty-state'),
         ])
 
     mapa = crear_mapa(df_clientes, vendedor)
