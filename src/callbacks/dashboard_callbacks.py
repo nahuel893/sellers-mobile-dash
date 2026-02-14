@@ -47,7 +47,7 @@ def _crear_slide_cervezas(datos, resumen):
         row = fila.iloc[0]
         card = crear_ring_marca(
             grupo=grupo,
-            pct=int(row['pct_tendencia']),
+            pct=row['pct_tendencia'],
             ventas=int(row['ventas']),
             cupo=int(row['cupo']),
             falta=int(row['falta']),
@@ -154,7 +154,7 @@ def _crear_seccion_agregada(datos_fn, resumen_fn, anchor_id):
 
 def _crear_bloque(titulo, carrusel, pct, css_class, href=None):
     """Crea un bloque con título + % + carrusel. Si href, el título es un link."""
-    titulo_content = [titulo, html.Span(f'  {pct}%', className='vendor-pct')]
+    titulo_content = [titulo, html.Span(f'  {pct:.1f}%', className='vendor-pct')]
     if href:
         titulo_el = html.H5(
             dcc.Link(titulo_content, href=href, className='nav-link-title'),
@@ -232,7 +232,7 @@ def _crear_bloque_vendedor(df, vendedor):
 
     titulo_content = [
         vendedor,
-        html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct'),
+        html.Span(f'  {resumen["pct_tendencia"]:.1f}%', className='vendor-pct'),
     ]
     mapa_link = dcc.Link(
         'Ver Mapa',
@@ -373,7 +373,7 @@ def _render_vendedor_page(df, vendedor):
     return html.Div([
         _crear_back_link('/'),
         html.H5(
-            [vendedor, html.Span(f'  {resumen["pct_tendencia"]}%', className='vendor-pct')],
+            [vendedor, html.Span(f'  {resumen["pct_tendencia"]:.1f}%', className='vendor-pct')],
             className='vendor-name',
         ),
         _crear_seccion_vendedor(df, vendedor),

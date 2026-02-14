@@ -18,7 +18,7 @@ def crear_gauge_total(pct, ventas, cupo, falta, tendencia):
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=pct,
-        number={'suffix': '%', 'font': {'size': 48, 'color': '#1a1a2e', 'family': 'Inter'}},
+        number={'suffix': '%', 'valueformat': '.1f', 'font': {'size': 48, 'color': '#1a1a2e', 'family': 'Inter'}},
         gauge={
             'axis': {
                 'range': [0, 150],
@@ -79,6 +79,7 @@ def crear_ring_marca(grupo, pct, ventas, cupo, falta):
         value=min(pct, 150),
         number={
             'suffix': '%',
+            'valueformat': '.1f',
             'font': {'size': 28, 'color': '#1a1a2e', 'family': 'Inter'},
         },
         gauge={

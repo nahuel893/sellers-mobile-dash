@@ -96,11 +96,11 @@ def _calcular_columnas_derivadas(df):
     """Calcula falta, tendencia, pct_tendencia, vta_diaria_necesaria."""
     df = df.copy()
     df['falta'] = df['cupo'] - df['ventas']
-    df['tendencia'] = (df['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS).round(0)
+    df['tendencia'] = df['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS
     df['pct_tendencia'] = (
         (df['tendencia'] / df['cupo'].replace(0, float('nan'))) * 100
-    ).fillna(0).round(0).astype(int)
-    df['vta_diaria_necesaria'] = (df['falta'] / DIAS_RESTANTES).round(1)
+    ).fillna(0)
+    df['vta_diaria_necesaria'] = df['falta'] / DIAS_RESTANTES
     return df
 
 

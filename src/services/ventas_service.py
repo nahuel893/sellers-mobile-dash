@@ -10,7 +10,7 @@ def calcular_tendencia(ventas, dias_trans=DIAS_TRANSCURRIDOS, dias_hab=DIAS_HABI
     """Proyección de ventas a fin de mes."""
     if dias_trans == 0:
         return 0
-    return round(ventas * dias_hab / dias_trans)
+    return ventas * dias_hab / dias_trans
 
 
 def calcular_pct_tendencia(ventas, cupo, dias_trans=DIAS_TRANSCURRIDOS, dias_hab=DIAS_HABILES):
@@ -18,7 +18,7 @@ def calcular_pct_tendencia(ventas, cupo, dias_trans=DIAS_TRANSCURRIDOS, dias_hab
     if cupo == 0:
         return 0
     tendencia = calcular_tendencia(ventas, dias_trans, dias_hab)
-    return round(tendencia / cupo * 100)
+    return tendencia / cupo * 100
 
 
 def get_sucursales(df):
@@ -62,7 +62,7 @@ def _resumen_desde_datos(datos, categoria='CERVEZAS'):
         total_cupo = int(datos_marcas['cupo'].sum())
 
     total_falta = total_cupo - int(total_ventas)
-    pct_total = round(total_tendencia / total_cupo * 100) if total_cupo > 0 else 0
+    pct_total = (total_tendencia / total_cupo * 100) if total_cupo > 0 else 0
     return {
         'ventas': int(total_ventas),
         'cupo': total_cupo,
