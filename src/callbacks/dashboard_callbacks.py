@@ -4,7 +4,8 @@ import dash_bootstrap_components as dbc
 
 from config import GRUPOS_MARCA, CATEGORIAS, NOMBRES_CATEGORIA
 from src.services.ventas_service import (
-    get_vendedores_por_supervisor, get_datos_vendedor, get_resumen_vendedor,
+    get_supervisores, get_vendedores_por_supervisor,
+    get_datos_vendedor, get_resumen_vendedor,
 )
 from src.layouts.gauges import crear_gauge_total, crear_ring_marca
 
@@ -122,14 +123,27 @@ def register_callbacks(df):
     """Registra todos los callbacks del dashboard."""
 
     @callback(
+        Output('dropdown-supervisor', 'options'),
+        Output('dropdown-supervisor', 'value'),
+        Input('dropdown-sucursal', 'value'),
+    )
+    def actualizar_supervisores(sucursal):
+        supervisores = get_supervisores(df, sucursal)
+        options = [{'label': s, 'value': s} for s in supervisores]
+        return options, supervisores[0] if supervisores else None
+
+    @callback(
         Output('dropdown-vendedor', 'options'),
         Output('dropdown-vendedor', 'value'),
         Output('dropdown-vendedor', 'disabled'),
         Input('dropdown-supervisor', 'value'),
+        Input('dropdown-sucursal', 'value'),
         Input('check-desplegar-todos', 'value'),
     )
-    def actualizar_vendedores(supervisor, desplegar_todos):
-        vendedores = get_vendedores_por_supervisor(df, supervisor)
+    def actualizar_vendedores(supervisor, sucursal, desplegar_todos):
+        if not supervisor:
+            return [], None, False
+        vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal)
         options = [{'label': v, 'value': v} for v in vendedores]
         disabled = 'todos' in (desplegar_todos or [])
         return options, vendedores[0] if vendedores else None, disabled
@@ -138,13 +152,14 @@ def register_callbacks(df):
         Output('dashboard-content', 'children'),
         Input('dropdown-vendedor', 'value'),
         Input('dropdown-supervisor', 'value'),
+        Input('dropdown-sucursal', 'value'),
         Input('check-desplegar-todos', 'value'),
     )
-    def actualizar_dashboard(vendedor, supervisor, desplegar_todos):
+    def actualizar_dashboard(vendedor, supervisor, sucursal, desplegar_todos):
         mostrar_todos = 'todos' in (desplegar_todos or [])
 
         if mostrar_todos:
-            vendedores = get_vendedores_por_supervisor(df, supervisor)
+            vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal)
             if not vendedores:
                 return html.Div('Sin vendedores', className='empty-state')
 

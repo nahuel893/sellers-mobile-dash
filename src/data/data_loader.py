@@ -10,7 +10,7 @@ import pandas as pd
 
 from config import (
     DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES,
-    MAPEO_GENERICO_CATEGORIA, GRUPOS_MARCA,
+    MAPEO_GENERICO_CATEGORIA, MAPEO_MARCA_GRUPO,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,8 @@ def _cargar_ventas_db():
     finally:
         conn.close()
 
+    # PostgreSQL devuelve Decimal → convertir a float
+    df['ventas'] = pd.to_numeric(df['ventas'], errors='coerce').fillna(0)
     return df
 
 
@@ -47,19 +49,19 @@ def _mapear_categorias(df):
     # Descartar genéricos que no mapeamos
     df = df.dropna(subset=['categoria'])
 
-    # --- CERVEZAS: marca → grupo_marca ---
+    # --- CERVEZAS: marca → grupo_marca via MAPEO_MARCA_GRUPO ---
     mask_cervezas = df['categoria'] == 'CERVEZAS'
-    df.loc[mask_cervezas, 'grupo_marca'] = df.loc[mask_cervezas, 'marca'].str.upper()
-
-    # Marcas que no son un grupo conocido van a MULTICERVEZAS (por ahora)
-    grupos_set = set(GRUPOS_MARCA)
-    mask_desconocida = mask_cervezas & ~df['grupo_marca'].isin(grupos_set)
-    df.loc[mask_desconocida, 'grupo_marca'] = 'MULTICERVEZAS'
+    df.loc[mask_cervezas, 'grupo_marca'] = (
+        df.loc[mask_cervezas, 'marca'].str.upper().map(MAPEO_MARCA_GRUPO)
+    )
+    # Marcas sin mapeo van a MULTICERVEZAS
+    mask_sin_mapeo = mask_cervezas & df['grupo_marca'].isna()
+    df.loc[mask_sin_mapeo, 'grupo_marca'] = 'MULTICERVEZAS'
 
     # Re-agregar por grupo_marca (varias marcas pueden caer en MULTICERVEZAS)
     df_cervezas = (
         df[mask_cervezas]
-        .groupby(['vendedor', 'categoria', 'grupo_marca'], as_index=False)
+        .groupby(['vendedor', 'sucursal', 'categoria', 'grupo_marca'], as_index=False)
         ['ventas'].sum()
     )
 
@@ -67,7 +69,7 @@ def _mapear_categorias(df):
     mask_otros = ~mask_cervezas
     df_otros = (
         df[mask_otros]
-        .groupby(['vendedor', 'categoria'], as_index=False)
+        .groupby(['vendedor', 'sucursal', 'categoria'], as_index=False)
         ['ventas'].sum()
     )
     df_otros['grupo_marca'] = None
@@ -78,7 +80,7 @@ def _mapear_categorias(df):
 def _cargar_cupos_csv():
     """
     Carga cupos y supervisores desde CSV.
-    Columnas esperadas: vendedor, supervisor, categoria, grupo_marca, cupo
+    Columnas esperadas: vendedor, sucursal, supervisor, categoria, grupo_marca, cupo
     """
     if not os.path.exists(CUPOS_CSV_PATH):
         logger.warning('Archivo de cupos no encontrado: %s', CUPOS_CSV_PATH)
@@ -122,16 +124,34 @@ def get_dataframe():
 
         # 3. Cupos desde CSV
         df_cupos = _cargar_cupos_csv()
-        if df_cupos is None:
-            raise FileNotFoundError('No hay archivo de cupos')
 
-        # 4. Merge ventas + cupos
-        merge_keys = ['vendedor', 'categoria', 'grupo_marca']
-        df = df_ventas.merge(
-            df_cupos[['vendedor', 'supervisor', 'categoria', 'grupo_marca', 'cupo']],
-            on=merge_keys,
-            how='inner',
-        )
+        # 4. Merge ventas + cupos (ambos tienen sucursal en formato "id - nombre")
+        if df_cupos is not None and len(df_cupos) > 0:
+            # Separar cupos individuales de TOTAL_CERVEZAS
+            cupos_total = df_cupos[df_cupos['grupo_marca'] == 'TOTAL_CERVEZAS'].copy()
+            cupos_marcas = df_cupos[df_cupos['grupo_marca'] != 'TOTAL_CERVEZAS'].copy()
+
+            merge_keys = ['vendedor', 'sucursal', 'categoria', 'grupo_marca']
+            df = df_ventas.merge(
+                cupos_marcas[['vendedor', 'sucursal', 'supervisor', 'categoria', 'grupo_marca', 'cupo']],
+                on=merge_keys,
+                how='left',
+            )
+            df['cupo'] = df['cupo'].fillna(0).astype(int)
+            df['supervisor'] = df['supervisor'].fillna('SIN SUPERVISOR')
+
+            # Agregar filas TOTAL_CERVEZAS (para que get_resumen_vendedor use este cupo)
+            if not cupos_total.empty:
+                cupos_total['ventas'] = 0
+                cupos_total['cupo'] = cupos_total['cupo'].astype(int)
+                cupos_total['supervisor'] = cupos_total['supervisor'].fillna('SIN SUPERVISOR')
+                df = pd.concat([df, cupos_total[['vendedor', 'sucursal', 'supervisor', 'categoria',
+                                                  'grupo_marca', 'ventas', 'cupo']]],
+                               ignore_index=True)
+        else:
+            df = df_ventas.copy()
+            df['supervisor'] = 'SIN SUPERVISOR'
+            df['cupo'] = 0
 
         # 5. Calcular columnas derivadas
         df = _calcular_columnas_derivadas(df)

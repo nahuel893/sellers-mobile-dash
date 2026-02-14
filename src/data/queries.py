@@ -7,6 +7,7 @@ import pandas as pd
 QUERY_VENTAS_MES = """
 SELECT
     dv.des_vendedor AS vendedor,
+    dv.id_sucursal || ' - ' || dv.des_sucursal AS sucursal,
     da.generico,
     da.marca,
     SUM(fv.cantidades_total) AS ventas
@@ -20,7 +21,7 @@ WHERE fv.fecha_comprobante >= %(fecha_desde)s
   AND fv.fecha_comprobante <= %(fecha_hasta)s
   AND dv.id_fuerza_ventas = 1
   AND da.generico IN ('CERVEZAS', 'AGUAS DANONE', 'VINOS CCU', 'SIDRAS Y LICORES')
-GROUP BY dv.des_vendedor, da.generico, da.marca
+GROUP BY dv.des_vendedor, dv.id_sucursal, dv.des_sucursal, da.generico, da.marca
 ORDER BY dv.des_vendedor, da.generico, da.marca
 """
 

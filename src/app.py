@@ -6,7 +6,7 @@ from dash import html
 import dash_bootstrap_components as dbc
 
 from src.data.data_loader import get_dataframe
-from src.services.ventas_service import get_supervisores
+from src.services.ventas_service import get_sucursales
 from src.layouts.header import crear_header
 from src.layouts.filters import crear_filtros
 from src.callbacks.dashboard_callbacks import register_callbacks
@@ -37,7 +37,7 @@ app.title = "Avance Preventa"
 # ============================================================
 app.layout = dbc.Container([
     crear_header(),
-    crear_filtros(get_supervisores(DF)),
+    crear_filtros(get_sucursales(DF)),
     html.Div(id='dashboard-content'),
 ], fluid=True, className='app-container')
 
