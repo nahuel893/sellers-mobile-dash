@@ -148,6 +148,20 @@ def get_dataframe():
             df['grupo_marca'] = df['grupo_marca'].replace(_SENTINEL, None)
             df['ventas'] = df['ventas'].fillna(0)
             df['cupo'] = df['cupo'].fillna(0).astype(int)
+
+            # Asignar supervisor: para filas sin match en cupos, buscar en el CSV
+            # (un vendedor puede tener ventas en categorías donde no tiene cupo)
+            sup_lookup = (
+                df_cupos.dropna(subset=['supervisor'])
+                .drop_duplicates(subset=['vendedor', 'sucursal'])
+                .set_index(['vendedor', 'sucursal'])['supervisor']
+            )
+            sin_sup = df['supervisor'].isna()
+            if sin_sup.any():
+                df.loc[sin_sup, 'supervisor'] = df.loc[sin_sup].apply(
+                    lambda r: sup_lookup.get((r['vendedor'], r['sucursal']), 'SIN SUPERVISOR'),
+                    axis=1,
+                )
             df['supervisor'] = df['supervisor'].fillna('SIN SUPERVISOR')
 
             # Agregar filas TOTAL_CERVEZAS (para que get_resumen_vendedor use este cupo)
