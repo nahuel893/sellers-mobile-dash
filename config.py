@@ -29,6 +29,14 @@ NOMBRES_CATEGORIA = {
     'AGUAS_DANONE': 'Aguas Danone',
 }
 
+# Mapeo de genérico (dim_articulo.generico) → categoría del dashboard
+MAPEO_GENERICO_CATEGORIA = {
+    'CERVEZAS':          'CERVEZAS',
+    'AGUAS DANONE':      'AGUAS_DANONE',
+    'VINOS CCU':         'MULTICCU',
+    'SIDRAS Y LICORES':  'MULTICCU',
+}
+
 # --- Parámetros temporales (se calcularán dinámicamente después) ---
 DIAS_HABILES = 24
 DIAS_TRANSCURRIDOS = 11

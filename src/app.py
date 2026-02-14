@@ -5,7 +5,7 @@ import dash
 from dash import html
 import dash_bootstrap_components as dbc
 
-from src.data.mock_data import get_mock_dataframe
+from src.data.data_loader import get_dataframe
 from src.services.ventas_service import get_supervisores
 from src.layouts.header import crear_header
 from src.layouts.filters import crear_filtros
@@ -14,7 +14,7 @@ from src.callbacks.dashboard_callbacks import register_callbacks
 # ============================================================
 # Datos
 # ============================================================
-DF = get_mock_dataframe()
+DF = get_dataframe()
 
 # ============================================================
 # App
