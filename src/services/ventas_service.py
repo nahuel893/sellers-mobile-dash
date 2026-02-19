@@ -108,11 +108,13 @@ def _agregar_por_grupo_marca(df, mask, categoria):
     })
     agg['categoria'] = categoria
     agg['falta'] = agg['cupo'] - agg['ventas']
-    agg['tendencia'] = agg['ventas'].apply(lambda v: calcular_tendencia(v))
-    agg['pct_tendencia'] = agg.apply(
-        lambda row: calcular_pct_tendencia(row['ventas'], row['cupo']),
-        axis=1,
-    )
+    if DIAS_TRANSCURRIDOS > 0:
+        agg['tendencia'] = agg['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS
+    else:
+        agg['tendencia'] = 0
+    agg['pct_tendencia'] = (
+        (agg['tendencia'] / agg['cupo'].replace(0, float('nan'))) * 100
+    ).fillna(0)
     return agg
 
 
