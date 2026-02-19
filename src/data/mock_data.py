@@ -3,7 +3,6 @@ Mock data para desarrollo del dashboard.
 Simula la estructura que vendrá de la capa Gold.
 """
 import pandas as pd
-from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
 
 # ============================================================
 # Datos mock: cupos y ventas por vendedor / grupo de marca
@@ -117,10 +116,5 @@ def get_mock_dataframe():
         'vendedor', 'supervisor', 'categoria', 'grupo_marca', 'ventas', 'cupo'
     ])
     df['sucursal'] = '1 - CASA CENTRAL'
-    df['falta'] = df['cupo'] - df['ventas']
-    df['tendencia'] = df['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS
-    df['pct_tendencia'] = (
-        (df['tendencia'] / df['cupo'].replace(0, float('nan'))) * 100
-    ).fillna(0)
-    df['vta_diaria_necesaria'] = df['falta'] / DIAS_RESTANTES
-    return df
+    from src.data.data_loader import _calcular_columnas_derivadas
+    return _calcular_columnas_derivadas(df)
