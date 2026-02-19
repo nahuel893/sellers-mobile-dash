@@ -123,7 +123,7 @@ def _crear_carrusel(slides, anchor_id):
     ], className='vendor-section')
 
 
-def _crear_seccion_vendedor(df, vendedor, con_anchor=False):
+def _crear_seccion_vendedor(df, vendedor):
     """Genera el carrusel completo de un vendedor con 1 slide por categoría."""
     vendor_id = _to_slug(vendedor).lower()
 
@@ -249,7 +249,7 @@ def _crear_bloque_vendedor(df, vendedor):
             dcc.Link(titulo_content, href=f'/vendedor/{_to_slug(vendedor)}', className='nav-link-title'),
             className='vendor-name',
         ),
-        _crear_seccion_vendedor(df, vendedor, con_anchor=True),
+        _crear_seccion_vendedor(df, vendedor),
     ], className='vendor-block')
 
 
