@@ -86,23 +86,22 @@ def _cargar_lookup_supervisores():
     return lookup
 
 
-def _leer_excel_cc_valle():
-    """Lee Cupo_CC_Valle.xlsx - tiene Descripción = vendedor."""
-    path = os.path.join(BASE_DIR, 'Cupo_CC_Valle.xlsx')
-    df = pd.read_excel(path)
-
-    # Normalizar nombres de columnas (encoding issues con Código/Descripción)
-    cols = df.columns.tolist()
+def _normalizar_columnas(df):
+    """Normaliza nombres de columnas con encoding issues (Código/Descripción)."""
     col_map = {}
-    for c in cols:
+    for c in df.columns:
         cl = c.lower()
         if 'digo' in cl or 'codigo' in cl:
             col_map[c] = 'codigo'
         elif 'descripci' in cl:
             col_map[c] = 'descripcion'
-        else:
-            col_map[c] = c
-    df = df.rename(columns=col_map)
+    return df.rename(columns=col_map)
+
+
+def _leer_excel_cc_valle():
+    """Lee Cupo_CC_Valle.xlsx - tiene Descripción = vendedor."""
+    path = os.path.join(BASE_DIR, 'Cupo_CC_Valle.xlsx')
+    df = _normalizar_columnas(pd.read_excel(path))
 
     df['Sucursal'] = df['Sucursal'].replace('VALLE SALTA', '1 - CASA CENTRAL')
     df['id_sucursal'] = df['Sucursal'].apply(_extraer_id_sucursal)
@@ -114,19 +113,7 @@ def _leer_excel_cc_valle():
 def _leer_excel_sucursales():
     """Lee Cupo_SUCURSALES.xlsx."""
     path = os.path.join(BASE_DIR, 'Cupo_SUCURSALES.xlsx')
-    df = pd.read_excel(path)
-
-    cols = df.columns.tolist()
-    col_map = {}
-    for c in cols:
-        cl = c.lower()
-        if 'digo' in cl or 'codigo' in cl:
-            col_map[c] = 'codigo'
-        elif 'descripci' in cl:
-            col_map[c] = 'descripcion'
-        else:
-            col_map[c] = c
-    df = df.rename(columns=col_map)
+    df = _normalizar_columnas(pd.read_excel(path))
 
     df['id_sucursal'] = df['SUCURSAL'].apply(_extraer_id_sucursal)
     df['codigo'] = df['codigo'].astype(int)
@@ -137,19 +124,7 @@ def _leer_excel_sucursales():
 def _leer_excel_guemes():
     """Lee Cupo_GUEMES.xlsx."""
     path = os.path.join(BASE_DIR, 'Cupo_GUEMES.xlsx')
-    df = pd.read_excel(path)
-
-    cols = df.columns.tolist()
-    col_map = {}
-    for c in cols:
-        cl = c.lower()
-        if 'digo' in cl or 'codigo' in cl:
-            col_map[c] = 'codigo'
-        elif 'descripci' in cl:
-            col_map[c] = 'descripcion'
-        else:
-            col_map[c] = c
-    df = df.rename(columns=col_map)
+    df = _normalizar_columnas(pd.read_excel(path))
 
     df['id_sucursal'] = df['SUCURSAL'].apply(_extraer_id_sucursal)
     df['codigo'] = df['codigo'].dropna().astype(int)
