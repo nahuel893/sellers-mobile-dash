@@ -160,15 +160,12 @@ def get_dataframe():
             sup_lookup = (
                 df_cupos.dropna(subset=['supervisor'])
                 .drop_duplicates(subset=['vendedor', 'sucursal'])
-                .set_index(['vendedor', 'sucursal'])['supervisor']
+                [['vendedor', 'sucursal', 'supervisor']]
+                .rename(columns={'supervisor': '_sup_lookup'})
             )
-            sin_sup = df['supervisor'].isna()
-            if sin_sup.any():
-                df.loc[sin_sup, 'supervisor'] = df.loc[sin_sup].apply(
-                    lambda r: sup_lookup.get((r['vendedor'], r['sucursal']), 'SIN SUPERVISOR'),
-                    axis=1,
-                )
-            df['supervisor'] = df['supervisor'].fillna('SIN SUPERVISOR')
+            df = df.merge(sup_lookup, on=['vendedor', 'sucursal'], how='left')
+            df['supervisor'] = df['supervisor'].fillna(df['_sup_lookup']).fillna('SIN SUPERVISOR')
+            df = df.drop(columns=['_sup_lookup'])
 
             # Agregar filas TOTAL_CERVEZAS (para que get_resumen_vendedor use este cupo)
             if not cupos_total.empty:
