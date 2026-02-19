@@ -13,7 +13,7 @@ body {
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 .app-container {
@@ -377,8 +377,7 @@ body {
 }
 
 /* Dash dropdown styling */
-#dropdown-supervisor,
-#dropdown-vendedor {
+#dropdown-supervisor {
     font-family: 'Inter', sans-serif;
     font-size: 0.82rem;
 }
