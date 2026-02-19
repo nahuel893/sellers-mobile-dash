@@ -123,12 +123,16 @@ def _crear_carrusel(slides, anchor_id):
     ], className='vendor-section')
 
 
-def _crear_seccion_vendedor(df, vendedor):
-    """Genera el carrusel completo de un vendedor con 1 slide por categoría."""
+def _crear_seccion_vendedor(df, vendedor, resumen_cerv=None):
+    """Genera el carrusel completo de un vendedor con 1 slide por categoría.
+
+    Si resumen_cerv se provee, se reutiliza para evitar recalcularlo.
+    """
     vendor_id = _to_slug(vendedor).lower()
 
     datos_cerv = get_datos_vendedor(df, vendedor, 'CERVEZAS')
-    resumen_cerv = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
+    if resumen_cerv is None:
+        resumen_cerv = get_resumen_vendedor(df, vendedor, 'CERVEZAS')
 
     slides = [_crear_slide_cervezas(datos_cerv, resumen_cerv)]
     for cat in [c for c in CATEGORIAS if c != 'CERVEZAS']:
@@ -249,7 +253,7 @@ def _crear_bloque_vendedor(df, vendedor):
             dcc.Link(titulo_content, href=f'/vendedor/{_to_slug(vendedor)}', className='nav-link-title'),
             className='vendor-name',
         ),
-        _crear_seccion_vendedor(df, vendedor),
+        _crear_seccion_vendedor(df, vendedor, resumen_cerv=resumen),
     ], className='vendor-block')
 
 
