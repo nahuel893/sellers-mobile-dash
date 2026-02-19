@@ -8,6 +8,7 @@ from dash import html, dcc, callback, Input, Output
 import dash_bootstrap_components as dbc
 
 from config import GRUPOS_MARCA, CATEGORIAS, NOMBRES_CATEGORIA
+from src.data.data_loader import get_dataframe
 from src.services.ventas_service import (
     get_sucursales, get_supervisores, get_vendedores_por_supervisor,
     get_datos_vendedor, get_resumen_vendedor,
@@ -277,7 +278,7 @@ def _parse_url(pathname):
     return 'home', None
 
 
-def register_callbacks(df):
+def register_callbacks():
     """Registra todos los callbacks del dashboard."""
 
     @callback(
@@ -287,6 +288,7 @@ def register_callbacks(df):
     )
     def router(pathname, search):
         """Renderiza la vista según la URL."""
+        df = get_dataframe()
         vista, param = _parse_url(pathname)
 
         if vista == 'home':
@@ -327,6 +329,7 @@ def register_callbacks(df):
         Input('dropdown-sucursal', 'value'),
     )
     def actualizar_supervisores(sucursal):
+        df = get_dataframe()
         supervisores = get_supervisores(df, sucursal)
         options = [{'label': s, 'value': s} for s in supervisores]
         return options, supervisores[0] if supervisores else None
@@ -338,6 +341,7 @@ def register_callbacks(df):
         Input('dropdown-sucursal', 'value'),
     )
     def actualizar_dashboard(supervisor, sucursal):
+        df = get_dataframe()
         # Totales de jerarquía: sucursal y supervisor
         seccion_suc = _crear_seccion_sucursal(df, sucursal) if sucursal else None
         seccion_sup = _crear_seccion_supervisor(df, supervisor, sucursal) if supervisor else None

@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 
 CUPOS_CSV_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'cupos.csv')
 
+# --- Daily cache for get_dataframe ---
+_df_cache = None
+_df_cache_date = None
+
 
 def _cargar_ventas_db():
     """Trae ventas del mes actual desde PostgreSQL."""
@@ -112,13 +116,21 @@ def _calcular_columnas_derivadas(df):
 
 
 def get_dataframe():
+    """Retorna DataFrame cacheado por día. Recarga automáticamente al cambiar de fecha."""
+    global _df_cache, _df_cache_date
+    hoy = date.today()
+    if _df_cache is None or _df_cache_date != hoy:
+        logger.info('Cargando datos (fecha: %s)', hoy)
+        _df_cache = _load_dataframe()
+        _df_cache_date = hoy
+    return _df_cache
+
+
+def _load_dataframe():
     """
-    Retorna DataFrame con la misma estructura que mock_data.
+    Carga datos desde PostgreSQL + CSV de cupos (o mock como fallback).
     Columnas: vendedor, supervisor, categoria, grupo_marca, ventas, cupo,
               falta, tendencia, pct_tendencia, vta_diaria_necesaria
-
-    Intenta conectar a PostgreSQL + CSV de cupos.
-    Si falla, cae a datos mock.
     """
     try:
         # 1. Ventas desde BD

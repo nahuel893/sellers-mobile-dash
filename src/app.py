@@ -10,9 +10,9 @@ from src.layouts.header import crear_header
 from src.callbacks.dashboard_callbacks import register_callbacks
 
 # ============================================================
-# Datos
+# Pre-warm: carga datos en cache al arrancar
 # ============================================================
-DF = get_dataframe()
+get_dataframe()
 
 # ============================================================
 # App
@@ -32,18 +32,22 @@ app = dash.Dash(
 app.title = "Avance Preventa"
 
 # ============================================================
-# Layout — shell con routing
+# Layout — función: Dash la re-evalúa en cada page load
+# (así el header muestra la fecha y días hábiles actualizados)
 # ============================================================
-app.layout = dbc.Container([
-    dcc.Location(id='url', refresh=False),
-    crear_header(),
-    html.Div(id='page-content'),
-], fluid=True, className='app-container')
+def serve_layout():
+    return dbc.Container([
+        dcc.Location(id='url', refresh=False),
+        crear_header(),
+        html.Div(id='page-content'),
+    ], fluid=True, className='app-container')
+
+app.layout = serve_layout
 
 # ============================================================
-# Callbacks
+# Callbacks (obtienen datos frescos via get_dataframe())
 # ============================================================
-register_callbacks(DF)
+register_callbacks()
 
 # ============================================================
 # Health check (Flask route, no Dash overhead)
