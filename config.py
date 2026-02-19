@@ -110,10 +110,22 @@ def _calcular_dias_habiles_mes():
 
     return habiles_total, habiles_transcurridos
 
-DIAS_HABILES, DIAS_TRANSCURRIDOS = _calcular_dias_habiles_mes()
-# Garantizar mínimo 1 para evitar division by zero en tendencia/vta_diaria
-DIAS_TRANSCURRIDOS = max(DIAS_TRANSCURRIDOS, 1)
-DIAS_RESTANTES = max(DIAS_HABILES - DIAS_TRANSCURRIDOS, 1)
+_dias_cache = {}
+
+def get_dias_habiles():
+    """Retorna (habiles, transcurridos, restantes) recalculando si cambió el día."""
+    hoy = date.today()
+    if hoy not in _dias_cache:
+        _dias_cache.clear()  # Solo mantener el día actual
+        total, trans = _calcular_dias_habiles_mes()
+        trans = max(trans, 1)
+        restantes = max(total - trans, 1)
+        _dias_cache[hoy] = (total, trans, restantes)
+    return _dias_cache[hoy]
+
+# Backward compat — módulo-level (frozen al importar).
+# Preferir get_dias_habiles() en código nuevo.
+DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES = get_dias_habiles()
 
 # --- Colores de performance ---
 COLOR_VERDE = '#4CAF50'

@@ -15,7 +15,7 @@ except ImportError:
     _EXPECTED_ERRORS = (OSError, ImportError, ValueError)
 
 from config import (
-    DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES,
+    get_dias_habiles,
     MAPEO_GENERICO_CATEGORIA, MAPEO_MARCA_GRUPO,
 )
 
@@ -100,13 +100,14 @@ def _cargar_cupos_csv():
 
 def _calcular_columnas_derivadas(df):
     """Calcula falta, tendencia, pct_tendencia, vta_diaria_necesaria."""
+    dias_habiles, dias_transcurridos, dias_restantes = get_dias_habiles()
     df = df.copy()
     df['falta'] = df['cupo'] - df['ventas']
-    df['tendencia'] = df['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS
+    df['tendencia'] = df['ventas'] * dias_habiles / dias_transcurridos
     df['pct_tendencia'] = (
         (df['tendencia'] / df['cupo'].replace(0, float('nan'))) * 100
     ).fillna(0)
-    df['vta_diaria_necesaria'] = df['falta'] / DIAS_RESTANTES
+    df['vta_diaria_necesaria'] = df['falta'] / dias_restantes
     return df
 
 

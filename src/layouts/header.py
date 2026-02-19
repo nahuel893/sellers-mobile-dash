@@ -2,7 +2,7 @@
 from datetime import date
 
 from dash import html
-from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
+from config import get_dias_habiles
 
 _DIAS_SEMANA = [
     'lunes', 'martes', 'miércoles', 'jueves',
@@ -24,6 +24,7 @@ def _fecha_header():
 
 def crear_header():
     """Header del dashboard con info de días hábiles."""
+    dias_habiles, dias_transcurridos, dias_restantes = get_dias_habiles()
     return html.Div([
         html.Div(id='top'),
         html.H4('Avance Preventa', className='header-title'),
@@ -33,15 +34,15 @@ def crear_header():
         html.Div([
             html.Div([
                 html.Span('Días hábiles', className='dias-label'),
-                html.Span(str(DIAS_HABILES), className='dias-value'),
+                html.Span(str(dias_habiles), className='dias-value'),
             ], className='dias-item'),
             html.Div([
                 html.Span('Transcurridos', className='dias-label'),
-                html.Span(str(DIAS_TRANSCURRIDOS), className='dias-value dias-trans'),
+                html.Span(str(dias_transcurridos), className='dias-value dias-trans'),
             ], className='dias-item'),
             html.Div([
                 html.Span('Faltan', className='dias-label'),
-                html.Span(str(DIAS_RESTANTES), className='dias-value dias-rest'),
+                html.Span(str(dias_restantes), className='dias-value dias-rest'),
             ], className='dias-item'),
         ], className='dias-row'),
     ], className='header-section')

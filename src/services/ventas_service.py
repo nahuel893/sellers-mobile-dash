@@ -3,17 +3,21 @@ Capa de negocio: cálculos de tendencia, filtros y agregaciones.
 """
 import pandas as pd
 
-from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
+from config import get_dias_habiles
 
 
-def calcular_tendencia(ventas, dias_trans=DIAS_TRANSCURRIDOS, dias_hab=DIAS_HABILES):
+def calcular_tendencia(ventas, dias_trans=None, dias_hab=None):
     """Proyección de ventas a fin de mes."""
+    if dias_trans is None or dias_hab is None:
+        _hab, _trans, _ = get_dias_habiles()
+        dias_trans = dias_trans if dias_trans is not None else _trans
+        dias_hab = dias_hab if dias_hab is not None else _hab
     if dias_trans == 0:
         return 0
     return ventas * dias_hab / dias_trans
 
 
-def calcular_pct_tendencia(ventas, cupo, dias_trans=DIAS_TRANSCURRIDOS, dias_hab=DIAS_HABILES):
+def calcular_pct_tendencia(ventas, cupo, dias_trans=None, dias_hab=None):
     """% de tendencia vs cupo."""
     if cupo == 0:
         return 0
@@ -108,8 +112,9 @@ def _agregar_por_grupo_marca(df, mask, categoria):
     })
     agg['categoria'] = categoria
     agg['falta'] = agg['cupo'] - agg['ventas']
-    if DIAS_TRANSCURRIDOS > 0:
-        agg['tendencia'] = agg['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS
+    dias_habiles, dias_transcurridos, _ = get_dias_habiles()
+    if dias_transcurridos > 0:
+        agg['tendencia'] = agg['ventas'] * dias_habiles / dias_transcurridos
     else:
         agg['tendencia'] = 0
     agg['pct_tendencia'] = (
