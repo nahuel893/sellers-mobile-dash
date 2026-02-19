@@ -470,13 +470,13 @@ def _render_mapa_page(df, vendedor, search=None):
         ])
 
     try:
-        from src.data.db import get_connection
+        from src.data.db import get_connection, release_connection
         from src.data.queries import query_clientes_vendedor
         conn = get_connection()
         try:
             df_clientes = query_clientes_vendedor(conn, vendedor, id_sucursal)
         finally:
-            conn.close()
+            release_connection(conn)
     except ImportError:
         logger.warning('Módulo de BD no disponible para mapa')
         return html.Div([

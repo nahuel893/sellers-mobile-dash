@@ -22,7 +22,7 @@ import pandas as pd
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from config import MAPEO_DESAGREGADO_CUPO, NORMALIZAR_VENDEDOR, VENDEDORES_EXCLUIR
-from src.data.db import get_connection
+from src.data.db import get_connection, release_connection
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos_badie')
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos.csv')
@@ -44,7 +44,7 @@ def _cargar_lookup_vendedores():
         WHERE id_ruta_fv1 IS NOT NULL
           AND des_personal_fv1 IS NOT NULL
     """, conn)
-    conn.close()
+    release_connection(conn)
 
     # Crear dict (sucursal, ruta) → vendedor
     lookup = {}
@@ -61,7 +61,7 @@ def _cargar_lookup_sucursales():
         SELECT id_sucursal, descripcion
         FROM gold.dim_sucursal
     """, conn)
-    conn.close()
+    release_connection(conn)
 
     lookup = {}
     for _, row in df.iterrows():

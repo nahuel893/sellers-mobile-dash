@@ -26,7 +26,7 @@ CUPOS_CSV_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'cu
 
 def _cargar_ventas_db():
     """Trae ventas del mes actual desde PostgreSQL."""
-    from src.data.db import get_connection
+    from src.data.db import get_connection, release_connection
     from src.data.queries import query_ventas_mes
 
     hoy = date.today()
@@ -37,7 +37,7 @@ def _cargar_ventas_db():
     try:
         df = query_ventas_mes(conn, fecha_desde, fecha_hasta)
     finally:
-        conn.close()
+        release_connection(conn)
 
     # PostgreSQL devuelve Decimal → convertir a float
     df['ventas'] = pd.to_numeric(df['ventas'], errors='coerce').fillna(0)
