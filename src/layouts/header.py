@@ -1,24 +1,25 @@
 """Componente header con título, fecha y días."""
-import locale
 from datetime import date
 
 from dash import html
 from config import DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES
 
-# Intentar locale español para formato de fecha
-try:
-    locale.setlocale(locale.LC_TIME, 'es_AR.UTF-8')
-except locale.Error:
-    try:
-        locale.setlocale(locale.LC_TIME, 'Spanish_Argentina')
-    except locale.Error:
-        pass  # Queda en inglés si no hay locale español
+_DIAS_SEMANA = [
+    'lunes', 'martes', 'miércoles', 'jueves',
+    'viernes', 'sábado', 'domingo',
+]
+_MESES = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+]
 
 
 def _fecha_header():
-    """Retorna la fecha formateada para el header."""
+    """Retorna la fecha formateada en español sin depender de locale."""
     hoy = date.today()
-    return hoy.strftime('%A, %d de %B de %Y').capitalize()
+    dia_semana = _DIAS_SEMANA[hoy.weekday()]
+    mes = _MESES[hoy.month - 1]
+    return f'{dia_semana}, {hoy.day} de {mes} de {hoy.year}'.capitalize()
 
 
 def crear_header():
