@@ -116,7 +116,7 @@ def get_mock_dataframe():
     df = pd.DataFrame(_datos, columns=[
         'vendedor', 'supervisor', 'categoria', 'grupo_marca', 'ventas', 'cupo'
     ])
-    df['sucursal'] = 'CASA CENTRAL'
+    df['sucursal'] = '1 - CASA CENTRAL'
     df['falta'] = df['cupo'] - df['ventas']
     df['tendencia'] = df['ventas'] * DIAS_HABILES / DIAS_TRANSCURRIDOS
     df['pct_tendencia'] = (
