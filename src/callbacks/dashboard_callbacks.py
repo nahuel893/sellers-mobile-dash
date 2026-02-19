@@ -20,13 +20,25 @@ from src.layouts.mapa import crear_mapa
 
 
 def _to_slug(nombre):
-    """Convierte nombre a slug URL-safe: 'FACUNDO CACERES' → 'FACUNDO-CACERES'."""
-    return nombre.strip().replace(' ', '-')
+    """Convierte nombre a slug URL-safe: 'FACUNDO CACERES' → 'FACUNDO-CACERES'.
+
+    Preserves literal hyphens by encoding them as %2D first,
+    so that _from_slug can distinguish hyphens-as-spaces from real hyphens.
+    """
+    s = nombre.strip()
+    s = s.replace('-', '%2D')
+    s = s.replace(' ', '-')
+    return s
 
 
 def _from_slug(slug):
-    """Convierte slug a nombre: 'FACUNDO-CACERES' → 'FACUNDO CACERES'."""
-    return slug.replace('-', ' ')
+    """Convierte slug a nombre: 'FACUNDO-CACERES' → 'FACUNDO CACERES'.
+
+    Reverses _to_slug: hyphens become spaces, %2D becomes literal hyphen.
+    """
+    s = slug.replace('-', ' ')
+    s = unquote(s)  # %2D → -
+    return s
 
 
 def _crear_slide_cervezas(datos, resumen):
