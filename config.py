@@ -111,7 +111,9 @@ def _calcular_dias_habiles_mes():
     return habiles_total, habiles_transcurridos
 
 DIAS_HABILES, DIAS_TRANSCURRIDOS = _calcular_dias_habiles_mes()
-DIAS_RESTANTES = DIAS_HABILES - DIAS_TRANSCURRIDOS
+# Garantizar mínimo 1 para evitar division by zero en tendencia/vta_diaria
+DIAS_TRANSCURRIDOS = max(DIAS_TRANSCURRIDOS, 1)
+DIAS_RESTANTES = max(DIAS_HABILES - DIAS_TRANSCURRIDOS, 1)
 
 # --- Colores de performance ---
 COLOR_VERDE = '#4CAF50'
