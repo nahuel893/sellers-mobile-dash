@@ -1,17 +1,60 @@
-import { Link, useParams } from 'react-router';
+import { useState } from 'react';
+import { useParams, useSearchParams } from 'react-router';
 import { fromSlug } from '../lib/format';
+import { useSupervisor } from '../hooks/use-supervisor';
+import BackLink from '../components/BackLink';
+import CategoryToggle from '../components/CategoryToggle';
+import SummaryBlock from '../components/SummaryBlock';
+import VendorIndex from '../components/VendorIndex';
+import VendorBlock from '../components/VendorBlock';
 
 export default function SupervisorPage() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const sucursal = searchParams.get('sucursal');
+  const [globalSlide, setGlobalSlide] = useState(0);
+
+  const { data, isLoading, error } = useSupervisor(slug, sucursal);
+
   const nombre = slug ? fromSlug(slug) : '';
+  const pct = data?.categories.CERVEZAS?.resumen.pct_tendencia ?? 0;
+  const backTo = sucursal ? `/sucursal/${sucursal}` : '/';
 
   return (
-    <div className="p-6 text-center">
-      <Link to="/" className="text-sm text-brand-dark font-medium hover:underline">
-        &larr; Volver
-      </Link>
-      <h1 className="text-lg font-bold text-brand-dark mt-4">{nombre}</h1>
-      <p className="text-gray-400 mt-2 text-sm">Detalle supervisor — Fase 3</p>
-    </div>
+    <>
+      <BackLink to={backTo} />
+
+      {isLoading && (
+        <p className="text-center text-sm text-gray-400 py-8">Cargando datos...</p>
+      )}
+
+      {error && (
+        <p className="text-center text-sm text-red-500 py-8">Error al cargar datos</p>
+      )}
+
+      {data && (
+        <>
+          <CategoryToggle activeIndex={globalSlide} onChange={setGlobalSlide} />
+
+          <SummaryBlock
+            title={data.nombre ?? nombre}
+            pctTendencia={pct}
+            categories={data.categories}
+            variant="supervisor"
+            globalSlideIndex={globalSlide}
+          />
+
+          <VendorIndex vendedores={data.vendedores} />
+
+          {data.vendedores.map((v) => (
+            <VendorBlock
+              key={v.slug}
+              vendedor={v}
+              globalSlideIndex={globalSlide}
+            />
+          ))}
+        </>
+      )}
+    </>
   );
 }
