@@ -376,6 +376,13 @@ body {
     border-radius: 12px;
 }
 
+/* CSS containment: isolate Plotly graph reflows from rest of page */
+.gauge-total,
+.gauge-marca,
+.mapa-graph {
+    contain: layout style;
+}
+
 /* Dash dropdown styling */
 #dropdown-supervisor {
     font-family: 'Inter', sans-serif;
