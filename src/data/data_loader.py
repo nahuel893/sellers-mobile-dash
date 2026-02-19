@@ -8,6 +8,12 @@ from datetime import date
 
 import pandas as pd
 
+try:
+    import psycopg2
+    _EXPECTED_ERRORS = (OSError, ImportError, ValueError, psycopg2.Error)
+except ImportError:
+    _EXPECTED_ERRORS = (OSError, ImportError, ValueError)
+
 from config import (
     DIAS_HABILES, DIAS_TRANSCURRIDOS, DIAS_RESTANTES,
     MAPEO_GENERICO_CATEGORIA, MAPEO_MARCA_GRUPO,
@@ -183,7 +189,12 @@ def get_dataframe():
         logger.info('Datos cargados desde PostgreSQL + CSV (%d filas)', len(df))
         return df
 
-    except Exception as e:
-        logger.warning('Fallback a datos mock: %s', e)
+    except _EXPECTED_ERRORS as e:
+        # Errores esperados: sin conexión BD, sin CSV, query vacío
+        logger.warning('Fallback a datos mock (error de datos): %s', e)
         from src.data.mock_data import get_mock_dataframe
         return get_mock_dataframe()
+    except Exception:
+        # Bugs de programación: no silenciar
+        logger.exception('Error inesperado cargando datos')
+        raise
