@@ -44,3 +44,10 @@ app.layout = dbc.Container([
 # Callbacks
 # ============================================================
 register_callbacks(DF)
+
+# ============================================================
+# Health check (Flask route, no Dash overhead)
+# ============================================================
+@app.server.route('/health')
+def health():
+    return 'ok'
