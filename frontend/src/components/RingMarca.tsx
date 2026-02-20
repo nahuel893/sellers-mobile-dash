@@ -28,7 +28,7 @@ export default function RingMarca({
           className="w-2.5 h-2.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: brandColor }}
         />
-        <span className="text-[11px] font-bold uppercase text-brand-dark tracking-wider truncate">
+        <span className="text-[11px] xl:text-sm font-bold uppercase text-brand-dark tracking-wider truncate">
           {grupoMarca}
         </span>
       </div>
@@ -45,16 +45,16 @@ export default function RingMarca({
       {/* Métricas */}
       <div className="flex gap-1 mt-1 text-center">
         <div className="flex-1">
-          <div className="text-[9px] uppercase text-gray-500">Vendido</div>
-          <div className="text-[12px] font-bold text-brand-dark">{fmtNum(ventas)}</div>
+          <div className="text-[9px] xl:text-xs uppercase text-gray-500">Vendido</div>
+          <div className="text-[12px] xl:text-base font-bold text-brand-dark">{fmtNum(ventas)}</div>
         </div>
         <div className="flex-1">
-          <div className="text-[9px] uppercase text-gray-500">Cupo</div>
-          <div className="text-[12px] font-bold text-brand-dark">{fmtNum(cupo)}</div>
+          <div className="text-[9px] xl:text-xs uppercase text-gray-500">Cupo</div>
+          <div className="text-[12px] xl:text-base font-bold text-brand-dark">{fmtNum(cupo)}</div>
         </div>
         <div className="flex-1">
-          <div className="text-[9px] uppercase text-gray-500">Falta</div>
-          <div className="text-[12px] font-bold text-perf-red">{fmtNum(falta)}</div>
+          <div className="text-[9px] xl:text-xs uppercase text-gray-500">Falta</div>
+          <div className="text-[12px] xl:text-base font-bold text-perf-red">{fmtNum(falta)}</div>
         </div>
       </div>
     </div>
