@@ -4,73 +4,140 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Dash-based mobile-first sales dashboard ("Avance Preventa") for beverage company sales reps (preventistas). Displays sales progress vs quotas by brand group, with trend projections to end-of-month. UI, comments, and variable names are in **Spanish**.
+Mobile-first sales dashboard ("Avance Preventa") for beverage company sales reps. Displays sales progress vs quotas by brand group, with trend projections. UI, comments, and variable names are in **Spanish**.
 
-**Planned migration**: FastAPI + React (see `.claude/memory/MIGRATION_FASTAPI_REACT.md` for full plan).
+**Architecture**: FastAPI backend (REST API) + React frontend (SPA). Legacy Dash app still available for comparison.
 
 ## Commands
 
+### Backend (FastAPI)
 ```bash
-python run.py                        # Dev server at http://localhost:8050
-pytest                               # Run all tests (26 tests)
-pytest tests/test_ventas_service.py -v  # Single test file
-pytest tests/ -k test_falta          # Filter by keyword
-pip install -r requirements.txt      # Install dependencies
+cd backend && .venv/bin/uvicorn main:app --reload --port 8000  # Dev server
+cd backend && .venv/bin/pytest -v                                # 39 tests
+cd backend && .venv/bin/pytest tests/test_api.py -v              # Single file
+cd backend && .venv/bin/pytest -k test_falta                     # By keyword
 ```
 
-Requires `.env` with PostgreSQL credentials (see `.env.example`). If DB is unreachable, falls back to mock data automatically.
+### Frontend (React)
+```bash
+cd frontend && npm run dev          # Dev server at http://localhost:5173
+cd frontend && npm run build        # Production build → dist/
+cd frontend && npx tsc --noEmit     # Type check
+```
+
+### Legacy (Dash)
+```bash
+pip install -r requirements.txt
+python run.py                       # Dev server at http://localhost:8050
+```
+
+Requires `.env` with PostgreSQL credentials (see `.env.example`). If DB is unreachable, backend falls back to mock data automatically (except mapa endpoint).
 
 ## Architecture
 
-**Stack**: Dash 2.18 + Plotly + dash-bootstrap-components + Pandas + psycopg2 + python-dotenv
+### Backend (`backend/`)
+
+**Stack**: FastAPI + Pydantic v2 + Pandas + psycopg2
+
+```
+backend/
+├── main.py              # FastAPI app, CORS, lifespan, router registration
+├── schemas.py           # Pydantic response models
+├── dependencies.py      # DI: get_df() → cached DataFrame
+├── utils.py             # to_slug/from_slug, find_sucursal
+├── config.py            # Brand/category mappings, working-day calculations
+├── routers/
+│   ├── dashboard.py     # /api/dashboard, /api/vendedor, /api/supervisor, /api/sucursal
+│   ├── mapa.py          # /api/mapa/{slug} (direct DB query)
+│   └── config_router.py # /api/config/dias-habiles
+├── data/
+│   ├── data_loader.py   # Orchestrates: DB query + cupos merge + fallback
+│   ├── db.py            # PostgreSQL connection pool
+│   ├── queries.py       # SQL queries
+│   └── mock_data.py     # Mock data fallback
+├── services/
+│   └── ventas_service.py # Business logic: filtering, aggregation, trends
+└── tests/               # 39 tests (pytest + httpx TestClient)
+```
+
+### Frontend (`frontend/`)
+
+**Stack**: React 19 + TypeScript + Vite + Tailwind CSS v3 + TanStack Query v5 + React Router v7 + Leaflet
+
+```
+frontend/src/
+├── components/          # 13 reusable components (gauges, carousel, filters, map)
+├── pages/               # 6 pages (Home, Vendedor, Supervisor, Sucursal, Mapa, 404)
+├── hooks/               # 8 TanStack Query hooks
+├── lib/                 # api-client.ts, format.ts, constants.ts
+└── types/               # TypeScript interfaces (1:1 with schemas.py)
+```
+
+### Legacy Dash (`src/`)
+
+Still functional at port 8050. Not modified during migration.
+
+```
+src/
+├── data/                # DB + data loading (shared logic, copied to backend/)
+├── services/            # Business logic (copied to backend/)
+├── callbacks/           # Dash callbacks + view builders
+└── layouts/             # Dash HTML components (gauges, filters, header)
+```
 
 ### Data Flow
 
 ```
 PostgreSQL (Gold DW) + CSV quotas (data/cupos.csv)
         ↓
-  src/data/data_loader.py   — Orchestrates: queries DB, merges with cupos CSV, fallback to mock_data.py
+  backend/data/data_loader.py   — Query DB, merge cupos, fallback mock
         ↓
-  src/services/ventas_service.py  — Business logic: filtering, aggregation, trend calculations
+  backend/services/ventas_service.py  — Filter, aggregate, trend calculations
         ↓
-  src/callbacks/dashboard_callbacks.py → views.py  — Route dispatch + component assembly
+  backend/routers/  — REST endpoints (JSON responses)
         ↓
-  src/layouts/                — Dash HTML components (header, filters, gauges, map)
+  frontend/src/hooks/  — TanStack Query (fetch + cache)
+        ↓
+  frontend/src/components/  — React components (SVG gauges, carousels, map)
 ```
 
-### Key Directories
+## API Endpoints
 
-- `src/data/` — DB connection pooling (`db.py`), SQL queries (`queries.py`), data loading/caching (`data_loader.py`), mock fallback (`mock_data.py`)
-- `src/services/` — Business logic: sales aggregation, trend math (`ventas_service.py`)
-- `src/callbacks/` — Dash callback registration (`dashboard_callbacks.py`) and view builders (`views.py`)
-- `src/layouts/` — UI components: header, filter dropdowns, gauge charts, customer map
-- `assets/` — Static CSS (`styles.css`, mobile-first) and client-side JS (`carousel.js`)
-- `data/` — CSV quota files (`cupos.csv`), source spreadsheets, `supervisores.xlsx`
-- `scripts/procesar_cupos.py` — Excel → cupos.csv converter
-- `config.py` — Brand/category mappings, color scheme, working-day calculations
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/health` | Health check |
+| GET | `/api/config/dias-habiles` | Working days info |
+| GET | `/api/sucursales` | List branches |
+| GET | `/api/supervisores?sucursal=` | Supervisors by branch |
+| GET | `/api/vendedores?supervisor=&sucursal=` | Vendors by supervisor |
+| GET | `/api/dashboard?supervisor=&sucursal=` | Full dashboard (home) |
+| GET | `/api/vendedor/{slug}` | Vendor detail |
+| GET | `/api/supervisor/{slug}?sucursal=` | Supervisor detail |
+| GET | `/api/sucursal/{id}` | Branch detail |
+| GET | `/api/mapa/{slug}?sucursal=` | Customer coordinates |
 
-### Routing
+Interactive docs: `http://localhost:8000/docs`
 
-Client-side via `dcc.Location` + callback router. `suppress_callback_exceptions=True` for dynamic layout. URL patterns:
-- `/` — Home index with filter dropdowns
-- `/vendedor/<SLUG>` — Individual vendor detail
-- `/supervisor/<SLUG>?sucursal=ID` — Supervisor aggregate view
-- `/sucursal/<ID>` — Branch view
-- `/mapa/<SLUG>?sucursal=ID` — Customer map for vendor
-- `/health` — Flask health check (bypasses Dash)
+## Frontend Routes
 
-Slug encoding: spaces → hyphens, literal hyphens → `%2D` (see `to_slug()`/`from_slug()` in `views.py`).
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | Home | Cascading filters + gauges + vendor carousels |
+| `/vendedor/{slug}` | Vendedor | All categories stacked vertically |
+| `/supervisor/{slug}` | Supervisor | Category toggle + vendor blocks with sync |
+| `/sucursal/{id}` | Sucursal | Branch summary + supervisor blocks |
+| `/mapa/{slug}` | Mapa | Leaflet map with customer markers |
 
-### Data Caching
+## Slug Encoding
 
-`data_loader.py` caches the merged DataFrame daily (`_df_cache` + `_df_cache_date`). `config.py` caches working-day calculations per day. Both auto-refresh when the date changes.
+Spaces → hyphens, literal hyphens → `%2D`. See `to_slug()`/`from_slug()` in `backend/utils.py` and `frontend/src/lib/format.ts`.
 
 ## Business Rules
 
 - **Tendencia** = ventas × (dias_habiles / dias_transcurridos) — no rounding
 - **% Tendencia** = tendencia / cupo × 100 — no rounding, display with 1 decimal
 - **Falta** = cupo - ventas
-- Performance colors: green ≥80%, yellow 70-80%, red <70% (`config.py:color_por_rendimiento`)
+- Performance colors: green ≥80%, yellow 70-80%, red <70%
 - `DIAS_TRANSCURRIDOS` and `DIAS_RESTANTES` have minimum of 1 (avoid division by zero)
 
 ## Quota Logic (Important)
@@ -89,7 +156,21 @@ Quotas from `data/cupos.csv`. The `TOTAL_CERVEZAS` row is the **aggregate beer q
 
 PostgreSQL Gold layer (Medallion Architecture). Star schema with `fact_ventas` (7M+ rows). Dimensions: `dim_articulo`, `dim_cliente`, `dim_vendedor`, `dim_sucursal`. **Critical**: composite join keys `(id_vendedor, id_sucursal)` and `(id_cliente, id_sucursal)`. Column is `dim_sucursal.descripcion` (NOT `des_sucursal`). See `DB_CONTEXT_GOLD.md` for full schema.
 
+## Key Frontend Components
+
+| Component | Purpose |
+|-----------|---------|
+| `GaugeSvg` | Core SVG semicircular gauge (replaces Plotly, ~1KB each) |
+| `GaugeTotal` | Large gauge + 4 metrics (Vendido, Cupo, Falta, Tendencia) |
+| `RingMarca` | Brand card with color dot + small gauge + 3 metrics |
+| `CategorySlide` | CERVEZAS = gauge + brand grid; others = gauge only |
+| `CategoryCarousel` | Scroll-snap horizontal + dots + globalSlideIndex sync |
+| `CategoryToggle` | Pill buttons to sync all carousels to same category |
+| `SummaryBlock` | Sucursal/supervisor aggregate block with carousel |
+| `VendorBlock` | Vendor name-link + carousel |
+| `CustomerMap` | Leaflet wrapper with markers + popups |
+
 ## Known Issues
 
-- `responsive=True` on `dcc.Graph` breaks gauges — do NOT use
-- Too many Plotly graphs on home page (candidate for lazy loading)
+- Mapa endpoint requires live PostgreSQL connection (no mock fallback)
+- `responsive=True` on Dash `dcc.Graph` breaks gauges (legacy only)

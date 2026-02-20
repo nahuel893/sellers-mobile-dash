@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# Frontend — Avance Preventa
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SPA React que consume la API FastAPI del backend.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** + TypeScript
+- **Vite** (dev server con proxy a backend)
+- **Tailwind CSS v3** (mobile-first)
+- **TanStack Query v5** (data fetching + cache)
+- **React Router v7** (client-side routing)
+- **Leaflet** (mapas OpenStreetMap)
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev       # http://localhost:5173 (proxy /api → localhost:8000)
+npm run build     # Produccion → dist/
+npx tsc --noEmit  # Type check
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Requiere el backend corriendo en `localhost:8000`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Estructura
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── components/
+│   ├── GaugeSvg.tsx          # SVG semicircular gauge (core)
+│   ├── GaugeTotal.tsx        # Gauge grande + 4 metricas
+│   ├── RingMarca.tsx         # Card marca con gauge chico
+│   ├── CategorySlide.tsx     # Slide por categoria
+│   ├── CategoryCarousel.tsx  # Scroll-snap horizontal + dots
+│   ├── CategoryToggle.tsx    # Pills para sync global
+│   ├── VendorIndex.tsx       # Quick-nav pills
+│   ├── VendorBlock.tsx       # Bloque vendedor
+│   ├── SummaryBlock.tsx      # Bloque sucursal/supervisor
+│   ├── Header.tsx            # Header gradient + dias
+│   ├── Filters.tsx           # Selects cascading
+│   ├── BackLink.tsx          # Navegacion "< Volver"
+│   └── CustomerMap.tsx       # Leaflet map wrapper
+├── pages/
+│   ├── HomePage.tsx          # Filtros + gauges + vendedores
+│   ├── VendedorPage.tsx      # Categorias apiladas
+│   ├── SupervisorPage.tsx    # Toggle + vendor blocks
+│   ├── SucursalPage.tsx      # Sucursal + supervisores
+│   ├── MapaPage.tsx          # Mapa de clientes
+│   └── NotFoundPage.tsx      # 404
+├── hooks/
+│   ├── use-dashboard.ts      # Dashboard home
+│   ├── use-dias-habiles.ts   # Dias habiles
+│   ├── use-sucursales.ts     # Lista sucursales
+│   ├── use-supervisores.ts   # Supervisores por sucursal
+│   ├── use-vendedor.ts       # Detalle vendedor
+│   ├── use-supervisor.ts     # Detalle supervisor
+│   ├── use-sucursal.ts       # Detalle sucursal
+│   └── use-mapa.ts           # Clientes para mapa
+├── lib/
+│   ├── api-client.ts         # Fetch wrapper tipado
+│   ├── format.ts             # fmtNum, colorByPerformance, formatDateSpanish, toSlug
+│   └── constants.ts          # Colores, categorias, marcas
+├── types/
+│   └── api.ts                # Interfaces 1:1 con backend/schemas.py
+├── App.tsx                   # Router
+├── main.tsx                  # React root + QueryClient + BrowserRouter
+└── index.css                 # Tailwind + Inter font + carousel CSS + Leaflet
+```
+
+## Bundle
+
+| Archivo | Size | Gzip |
+|---------|------|------|
+| JS | 446 KB | 140 KB |
+| CSS | 28 KB | 10 KB |
