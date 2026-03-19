@@ -30,20 +30,10 @@ export default function GaugeSvg({
   const clampedValue = Math.min(Math.max(value, 0), max);
   const ratio = clampedValue / max;
 
-  // Arco de fondo: 180° (izquierda) a 0° (derecha)
-  const bgStartX = cx - r;
-  const bgEndX = cx + r;
-  const bgPath = `M ${bgStartX},${cy} A ${r},${r} 0 0,1 ${bgEndX},${cy}`;
-
-  // Arco de valor
-  const valueAngle = Math.PI - ratio * Math.PI;
-  const valueEndX = cx + r * Math.cos(valueAngle);
-  const valueEndY = cy - r * Math.sin(valueAngle);
-  const largeArc = ratio > 0.5 ? 1 : 0;
-  const valuePath =
-    ratio > 0
-      ? `M ${bgStartX},${cy} A ${r},${r} 0 ${largeArc},1 ${valueEndX.toFixed(2)},${valueEndY.toFixed(2)}`
-      : '';
+  // Arco compartido: mismo path para fondo y valor → alineación perfecta
+  const arcPath = `M ${cx - r},${cy} A ${r},${r} 0 0,1 ${cx + r},${cy}`;
+  const circumference = Math.PI * r;
+  const dashOffset = (1 - ratio) * circumference;
 
   // Tick de threshold en 100%
   const thresholdRatio = Math.min(100 / max, 1);
@@ -59,22 +49,22 @@ export default function GaugeSvg({
     <svg viewBox="0 0 200 120" className={className}>
       {/* Arco de fondo */}
       <path
-        d={bgPath}
+        d={arcPath}
         fill="none"
         stroke="#e9ecef"
         strokeWidth={strokeWidth}
         strokeLinecap="round"
       />
-      {/* Arco de valor */}
-      {valuePath && (
-        <path
-          d={valuePath}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-        />
-      )}
+      {/* Arco de valor: mismo path, dashoffset controla la fracción visible */}
+      <path
+        d={arcPath}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={dashOffset}
+      />
       {/* Tick en 100% */}
       {showThreshold && (
         <line
