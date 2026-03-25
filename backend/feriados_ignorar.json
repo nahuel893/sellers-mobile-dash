@@ -1,0 +1,6 @@
+{
+  "_comentario": "Feriados oficiales que la empresa NO toma. Formato: YYYY-MM-DD con motivo.",
+  "ignorar": [
+    { "fecha": "2026-03-23", "motivo": "Puente turístico — la empresa trabaja" }
+  ]
+}

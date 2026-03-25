@@ -84,10 +84,36 @@ NORMALIZAR_VENDEDOR = {
 VENDEDORES_EXCLUIR = []
 
 # --- Parámetros temporales (calculados dinámicamente) ---
-from datetime import date
+import logging
+from datetime import date, timedelta
+
+import json
+from pathlib import Path
+
+import holidays as _holidays_lib
+
+logger = logging.getLogger(__name__)
+
+_FERIADOS_IGNORAR_PATH = Path(__file__).parent / "feriados_ignorar.json"
+
+def _cargar_feriados_ignorar() -> set[date]:
+    """Carga fechas que la empresa NO toma como feriado desde el JSON."""
+    if not _FERIADOS_IGNORAR_PATH.exists():
+        return set()
+    try:
+        data = json.loads(_FERIADOS_IGNORAR_PATH.read_text(encoding="utf-8"))
+        fechas = set()
+        for entry in data.get("ignorar", []):
+            f = date.fromisoformat(entry["fecha"])
+            fechas.add(f)
+            logger.info("Feriado IGNORADO (empresa trabaja): %s — %s", entry["fecha"], entry.get("motivo", ""))
+        return fechas
+    except Exception as e:
+        logger.warning("No se pudo leer %s: %s — se usarán todos los feriados", _FERIADOS_IGNORAR_PATH, e)
+        return set()
 
 def _calcular_dias_habiles_mes():
-    """Calcula días hábiles (L-V) del mes actual y transcurridos hasta hoy."""
+    """Calcula días hábiles (L-S, excluyendo feriados AR) del mes actual y transcurridos hasta hoy."""
     hoy = date.today()
     primer_dia = hoy.replace(day=1)
     # Último día del mes
@@ -95,18 +121,35 @@ def _calcular_dias_habiles_mes():
         ultimo_dia = date(hoy.year + 1, 1, 1).replace(day=1)
     else:
         ultimo_dia = date(hoy.year, hoy.month + 1, 1)
-    from datetime import timedelta
     ultimo_dia = ultimo_dia - timedelta(days=1)
+
+    ar_holidays = _holidays_lib.Argentina(years=hoy.year)
+    ignorar = _cargar_feriados_ignorar()
 
     habiles_total = 0
     habiles_transcurridos = 0
+    feriados_excluidos = []
     dia = primer_dia
     while dia <= ultimo_dia:
-        if dia.weekday() < 5:  # Lunes=0 a Viernes=4
+        es_laboral = dia.weekday() < 6  # Lunes=0 a Sábado=5
+        es_feriado = es_laboral and dia in ar_holidays and dia not in ignorar
+        if es_feriado:
+            nombre = ar_holidays.get(dia)
+            feriados_excluidos.append((dia, nombre))
+            logger.info("Feriado excluido: %s — %s", dia.strftime("%Y-%m-%d"), nombre)
+        elif es_laboral:
             habiles_total += 1
             if dia <= hoy:
                 habiles_transcurridos += 1
         dia += timedelta(days=1)
+
+    nombres_fer = [f"{f[0].strftime('%d/%m')} {f[1]}" for f in feriados_excluidos]
+    mes_nombre = hoy.strftime("%B %Y").capitalize()
+    logger.info(
+        "%s: %d días hábiles (%d feriados excluidos: [%s])",
+        mes_nombre, habiles_total, len(feriados_excluidos),
+        ", ".join(nombres_fer) if nombres_fer else "ninguno",
+    )
 
     return habiles_total, habiles_transcurridos
 
