@@ -59,7 +59,7 @@ function MetricBox({
       <div className="text-[10px] xl:text-sm uppercase tracking-wider text-gray-500 font-medium">
         {label}
       </div>
-      <div className={`text-sm xl:text-xl font-bold text-brand-dark ${className}`}>
+      <div className={`text-lg xl:text-2xl font-bold text-brand-dark ${className}`}>
         {value}
       </div>
     </div>
