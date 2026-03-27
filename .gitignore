@@ -6,3 +6,9 @@ __pycache__/
 venv/
 nul
 app_output.log
+
+# Datos generados y fuentes Excel
+data/*.csv
+data/*.xlsx
+data/.~*
+data/cupos_badie/
