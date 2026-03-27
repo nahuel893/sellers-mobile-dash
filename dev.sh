@@ -41,7 +41,7 @@ echo ""
 # ── Levantar backend ──────────────────────────────────────────────────────────
 (
     cd "$ROOT/backend"
-    .venv/bin/uvicorn main:app --reload --port 8000 --host 0.0.0.0 2>&1 | \
+    .venv/bin/uvicorn main:app --reload --port 8001 --host 0.0.0.0 2>&1 | \
         while IFS= read -r line; do echo "[backend] $line"; done
 ) &
 BACKEND_PID=$!
@@ -62,8 +62,8 @@ echo "├──────────────┬────────�
 echo "│              │ Local                  LAN       │"
 echo "├──────────────┼────────────────────────┬─────────┤"
 echo "│ Frontend     │ http://localhost:5173  │ http://${LAN_IP}:5173  │"
-echo "│ Backend      │ http://localhost:8000  │ http://${LAN_IP}:8000  │"
-echo "│ API Docs     │ http://localhost:8000/docs        │"
+echo "│ Backend      │ http://localhost:8001  │ http://${LAN_IP}:8000  │"
+echo "│ API Docs     │ http://localhost:8001/docs        │"
 echo "└──────────────┴────────────────────────────────────┘"
 echo ""
 echo "Backend PID: $BACKEND_PID  |  Frontend PID: $FRONTEND_PID"
