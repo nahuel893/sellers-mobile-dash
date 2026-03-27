@@ -5,6 +5,7 @@ import type {
   SupervisorDetailResponse,
   SucursalDetailResponse,
   Cliente,
+  CoberturaResponse,
 } from '../types/api';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -46,4 +47,14 @@ export const api = {
       `/api/mapa/${slug}`,
       sucursal ? { sucursal } : undefined,
     ),
+  getCobertura: (sucursal?: string, supervisor?: string, vendedor?: string) => {
+    const params: Record<string, string> = {};
+    if (sucursal) params.sucursal = sucursal;
+    if (supervisor) params.supervisor = supervisor;
+    if (vendedor) params.vendedor = vendedor;
+    return apiFetch<CoberturaResponse>(
+      '/api/cobertura',
+      Object.keys(params).length ? params : undefined,
+    );
+  },
 };

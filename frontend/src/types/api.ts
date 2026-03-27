@@ -65,6 +65,30 @@ export interface DiasHabiles {
   fecha: string;
 }
 
+/** Matches CoberturaMarcaItem */
+export interface CoberturaMarcaItem {
+  marca: string;
+  cobertura: number;
+  cupo: number;
+  pct_cobertura: number;
+}
+
+/** Matches CoberturaVendedorData */
+export interface CoberturaVendedorData {
+  vendedor: string;
+  sucursal: string;
+  marcas: CoberturaMarcaItem[];
+  total_cobertura: number;
+  total_cupo: number;
+  pct_total: number;
+}
+
+/** Matches CoberturaResponse */
+export interface CoberturaResponse {
+  sucursal: string;
+  vendedores: CoberturaVendedorData[];
+}
+
 /** Matches ClienteResponse */
 export interface Cliente {
   razon_social: string;

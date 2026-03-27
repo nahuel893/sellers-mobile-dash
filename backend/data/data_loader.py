@@ -22,10 +22,15 @@ from config import (
 logger = logging.getLogger(__name__)
 
 CUPOS_CSV_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'cupos.csv')
+CUPOS_COBERTURA_CSV_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'cupos_cobertura.csv')
 
 # --- Daily cache for get_dataframe ---
 _df_cache = None
 _df_cache_date = None
+
+# --- Daily cache for get_cobertura_dataframe ---
+_cob_cache = None
+_cob_cache_date = None
 
 
 def _cargar_ventas_db():
@@ -207,4 +212,118 @@ def _load_dataframe():
     except Exception:
         # Bugs de programación: no silenciar
         logger.exception('Error inesperado cargando datos')
+        raise
+
+
+# ============================================================
+# Cobertura
+# ============================================================
+
+def _cargar_cobertura_db():
+    """Trae cobertura del mes actual desde PostgreSQL."""
+    from data.db import get_connection, release_connection
+    from data.queries import query_cobertura_mes
+
+    hoy = date.today()
+    fecha_desde = hoy.replace(day=1)
+
+    conn = get_connection()
+    try:
+        df = query_cobertura_mes(conn, fecha_desde)
+    finally:
+        release_connection(conn)
+
+    df['cobertura'] = pd.to_numeric(df['cobertura'], errors='coerce').fillna(0).astype(int)
+    return df
+
+
+def _cargar_cupos_cobertura_csv():
+    """
+    Carga cupos de cobertura desde CSV.
+    Columnas esperadas: vendedor, marca, sucursal, cupo_cobertura
+    """
+    if not os.path.exists(CUPOS_COBERTURA_CSV_PATH):
+        logger.warning('Archivo de cupos cobertura no encontrado: %s', CUPOS_COBERTURA_CSV_PATH)
+        return None
+
+    return pd.read_csv(CUPOS_COBERTURA_CSV_PATH)
+
+
+def _cargar_supervisor_lookup():
+    """Carga mapeo vendedor+sucursal → supervisor desde cupos.csv."""
+    df_cupos = _cargar_cupos_csv()
+    if df_cupos is None:
+        return pd.DataFrame(columns=['vendedor', 'sucursal', 'supervisor'])
+
+    return (
+        df_cupos.dropna(subset=['supervisor'])
+        .drop_duplicates(subset=['vendedor', 'sucursal'])
+        [['vendedor', 'sucursal', 'supervisor']]
+    )
+
+
+def get_cobertura_dataframe():
+    """Retorna DataFrame de cobertura cacheado por día."""
+    global _cob_cache, _cob_cache_date
+    hoy = date.today()
+    if _cob_cache is None or _cob_cache_date != hoy:
+        logger.info('Cargando datos de cobertura (fecha: %s)', hoy)
+        _cob_cache = _load_cobertura_dataframe()
+        _cob_cache_date = hoy
+    return _cob_cache
+
+
+def _load_cobertura_dataframe():
+    """
+    Carga cobertura desde PostgreSQL + CSV de cupos cobertura.
+    Solo mantiene marcas que aparecen en el CSV de cupos.
+
+    Columnas: vendedor, sucursal, supervisor, marca, cobertura, cupo_cobertura, pct_cobertura
+    """
+    try:
+        # 1. Cobertura desde BD
+        df_cob = _cargar_cobertura_db()
+        if df_cob.empty:
+            raise ValueError('Query de cobertura retornó vacío')
+
+        # 2. Cupos cobertura desde CSV
+        df_cupos = _cargar_cupos_cobertura_csv()
+        if df_cupos is None or df_cupos.empty:
+            raise ValueError('CSV de cupos cobertura vacío o no encontrado')
+
+        # 3. Merge: LEFT desde cupos (solo marcas con cupo)
+        merge_keys = ['vendedor', 'sucursal', 'marca']
+        df = df_cupos.merge(
+            df_cob[['vendedor', 'sucursal', 'marca', 'cobertura']],
+            on=merge_keys,
+            how='left',
+        )
+
+        # Rellenar faltantes
+        df['cobertura'] = df['cobertura'].fillna(0).astype(int)
+        df['cupo_cobertura'] = df['cupo_cobertura'].fillna(0).astype(int)
+
+        # 4. Calcular porcentaje
+        df['pct_cobertura'] = df.apply(
+            lambda row: (row['cobertura'] / row['cupo_cobertura'] * 100)
+            if row['cupo_cobertura'] > 0 else 0.0,
+            axis=1,
+        )
+
+        # 5. Asignar supervisor desde cupos.csv
+        sup_lookup = _cargar_supervisor_lookup()
+        df = df.merge(sup_lookup, on=['vendedor', 'sucursal'], how='left')
+        df['supervisor'] = df['supervisor'].fillna('SIN SUPERVISOR')
+
+        logger.info('Datos de cobertura cargados (%d filas)', len(df))
+        return df
+
+    except _EXPECTED_ERRORS as e:
+        logger.warning('Error cargando cobertura: %s', e)
+        return pd.DataFrame(columns=[
+            'vendedor', 'sucursal', 'supervisor', 'marca',
+            'cobertura', 'cupo_cobertura', 'pct_cobertura',
+        ])
+    except Exception:
+        logger.exception('Error inesperado cargando cobertura')
         raise

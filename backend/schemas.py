@@ -80,3 +80,29 @@ class DiasHabilesResponse(BaseModel):
     transcurridos: int
     restantes: int
     fecha: str
+
+
+# --- Cobertura ---
+
+class CoberturaMarcaItem(BaseModel):
+    """Cobertura de una marca para un vendedor."""
+    marca: str
+    cobertura: int
+    cupo: int
+    pct_cobertura: float
+
+
+class CoberturaVendedorResponse(BaseModel):
+    """Cobertura de un vendedor con desglose por marca."""
+    vendedor: str
+    sucursal: str
+    marcas: list[CoberturaMarcaItem]
+    total_cobertura: int
+    total_cupo: int
+    pct_total: float
+
+
+class CoberturaResponse(BaseModel):
+    """Cobertura de una sucursal con desglose por vendedor."""
+    sucursal: str
+    vendedores: list[CoberturaVendedorResponse]

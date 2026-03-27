@@ -41,10 +41,12 @@ app.add_middleware(
 from routers.dashboard import router as dashboard_router
 from routers.mapa import router as mapa_router
 from routers.config_router import router as config_router
+from routers.cobertura import router as cobertura_router
 
 app.include_router(dashboard_router)
 app.include_router(mapa_router)
 app.include_router(config_router)
+app.include_router(cobertura_router)
 
 
 @app.get("/health")
