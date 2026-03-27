@@ -68,6 +68,7 @@ export interface DiasHabiles {
 /** Matches CoberturaMarcaItem */
 export interface CoberturaMarcaItem {
   marca: string;
+  generico: string;
   cobertura: number;
   cupo: number;
   pct_cobertura: number;

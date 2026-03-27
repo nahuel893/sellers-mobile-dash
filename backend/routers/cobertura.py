@@ -48,11 +48,12 @@ def get_cobertura(
     # Agrupar por vendedor
     vendedores = []
     for (vendedor, suc), grupo in df.groupby(['vendedor', 'sucursal'], sort=True):
-        # Marcas ordenadas por cupo descendente
-        marcas_df = grupo.sort_values('cupo_cobertura', ascending=False)
+        # Marcas ordenadas por genérico y luego cupo descendente
+        marcas_df = grupo.sort_values(['generico', 'cupo_cobertura'], ascending=[True, False])
         marcas = [
             CoberturaMarcaItem(
                 marca=row['marca'],
+                generico=row.get('generico', 'OTROS'),
                 cobertura=int(row['cobertura']),
                 cupo=int(row['cupo_cobertura']),
                 pct_cobertura=round(float(row['pct_cobertura']), 1),

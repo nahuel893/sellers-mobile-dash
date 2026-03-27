@@ -87,6 +87,7 @@ class DiasHabilesResponse(BaseModel):
 class CoberturaMarcaItem(BaseModel):
     """Cobertura de una marca para un vendedor."""
     marca: str
+    generico: str
     cobertura: int
     cupo: int
     pct_cobertura: float

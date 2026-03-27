@@ -48,16 +48,16 @@ export default function RingMarca({
         />
       </div>
       {/* Métricas */}
-      <div className="flex gap-1.5 mt-2 text-center">
-        <div className="flex-1">
+      <div className="flex mt-2 text-center divide-x divide-gray-200">
+        <div className="flex-1 px-1">
           <div className="text-[10px] xl:text-sm uppercase text-gray-500">Vendido</div>
           <div className="text-base xl:text-xl font-bold text-brand-dark">{fmtNum(ventas)}</div>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 px-1">
           <div className="text-[10px] xl:text-sm uppercase text-gray-500">Cupo</div>
           <div className="text-base xl:text-xl font-bold text-brand-dark">{fmtNum(cupo)}</div>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 px-1">
           <div className="text-[10px] xl:text-sm uppercase text-gray-500">Falta</div>
           <div className="text-base xl:text-xl font-bold text-perf-red">{fmtNum(falta)}</div>
         </div>

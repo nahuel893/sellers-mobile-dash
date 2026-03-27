@@ -65,17 +65,28 @@ export default function VendedorPage() {
                 </tr>
               </thead>
               <tbody>
-                {marcas.map((m) => {
+                {marcas.map((m, i) => {
                   const falta = Math.max(m.cupo - m.cobertura, 0);
                   const color = colorByPerformance(m.pct_cobertura);
+                  const prevGenerico = i > 0 ? marcas[i - 1].generico : null;
+                  const showHeader = m.generico !== prevGenerico;
                   return (
-                    <tr key={m.marca} className="border-t border-gray-50">
-                      <td className="py-1.5 px-1 font-semibold text-brand-dark text-xs">{m.marca}</td>
-                      <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.cobertura}</td>
-                      <td className="py-1.5 px-1 text-right font-bold text-brand-dark">{m.cupo}</td>
-                      <td className="py-1.5 px-1 text-right font-bold text-red-500">{falta > 0 ? `-${falta}` : '—'}</td>
-                      <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.pct_cobertura.toFixed(0)}%</td>
-                    </tr>
+                    <>
+                      {showHeader && (
+                        <tr key={`hdr-${m.generico}`} className="bg-gray-50">
+                          <td colSpan={5} className="py-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                            {m.generico}
+                          </td>
+                        </tr>
+                      )}
+                      <tr key={m.marca} className="border-t border-gray-50">
+                        <td className="py-1.5 px-1 pl-3 font-semibold text-brand-dark text-xs">{m.marca}</td>
+                        <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.cobertura}</td>
+                        <td className="py-1.5 px-1 text-right font-bold text-brand-dark">{m.cupo}</td>
+                        <td className="py-1.5 px-1 text-right font-bold text-red-500">{falta > 0 ? `-${falta}` : '—'}</td>
+                        <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.pct_cobertura.toFixed(0)}%</td>
+                      </tr>
+                    </>
                   );
                 })}
               </tbody>

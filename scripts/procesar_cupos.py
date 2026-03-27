@@ -226,6 +226,21 @@ def main():
     print(df_cupos.head(15).to_string(index=False))
 
 
+def _cargar_lookup_generico():
+    """Carga mapeo marca → genérico desde dim_articulo."""
+    conn = get_connection()
+    df = pd.read_sql_query("""
+        SELECT DISTINCT marca, generico
+        FROM gold.dim_articulo
+        WHERE marca IS NOT NULL AND generico IS NOT NULL AND generico != ''
+    """, conn)
+    release_connection(conn)
+    lookup = {}
+    for _, row in df.iterrows():
+        lookup[row['marca']] = row['generico']
+    return lookup
+
+
 def _procesar_cobertura():
     """Procesa cupos_cobertura.xlsx → data/cupos_cobertura.csv.
 
@@ -236,6 +251,11 @@ def _procesar_cobertura():
     output_cobertura = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos_cobertura.csv')
 
     print("\n--- Procesando cupos de cobertura ---")
+
+    print("  Cargando lookup de genérico desde dim_articulo...")
+    lookup_gen = _cargar_lookup_generico()
+    print(f"    {len(lookup_gen)} mapeos marca→genérico cargados")
+
     df = pd.read_excel(cobertura_path)
 
     # Strip column names (ej: "CUPO " → "CUPO")
@@ -266,8 +286,11 @@ def _procesar_cobertura():
         'CUPO': 'cupo_cobertura',
     })
 
-    # Ordenar y guardar
-    df_cupos = df_cupos.sort_values(['sucursal', 'vendedor', 'marca']).reset_index(drop=True)
+    # Agregar genérico
+    df_cupos['generico'] = df_cupos['marca'].map(lookup_gen).fillna('OTROS')
+
+    # Ordenar por genérico y luego marca
+    df_cupos = df_cupos.sort_values(['sucursal', 'vendedor', 'generico', 'marca']).reset_index(drop=True)
     df_cupos.to_csv(output_cobertura, index=False)
 
     print(f"  CSV generado: {output_cobertura}")
