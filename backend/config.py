@@ -74,11 +74,10 @@ MAPEO_GENERICO_CATEGORIA = {
 }
 
 # --- Normalización de nombres de vendedor ---
-# Nombre en cupos Excel (descripcion) puede diferir de dim_cliente/dim_vendedor.
-# Clave: nombre en cupos Excel → nombre en BD (dim_vendedor.des_vendedor)
-NORMALIZAR_VENDEDOR = {
-    'SUB DISTRIBUIDORES': 'SUB DISTRIBUIDOR',
-}
+# Kept empty for potential future use. Previously mapped cupos Excel names to
+# dim_vendedor.des_vendedor. No longer needed since both ventas query and cupos
+# now use dim_cliente.des_personal_fv1 as the single vendor identifier.
+NORMALIZAR_VENDEDOR = {}
 
 # Vendedores a excluir (aparecen en dim_cliente pero no son preventistas)
 VENDEDORES_EXCLUIR = []

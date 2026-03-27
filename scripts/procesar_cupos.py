@@ -18,11 +18,11 @@ import re
 
 import pandas as pd
 
-# Agregar raíz del proyecto al path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# Agregar backend/ al path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
 
-from config import MAPEO_DESAGREGADO_CUPO, NORMALIZAR_VENDEDOR, VENDEDORES_EXCLUIR
-from src.data.db import get_connection, release_connection
+from config import MAPEO_DESAGREGADO_CUPO, VENDEDORES_EXCLUIR
+from data.db import get_connection, release_connection
 
 BASE_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos_badie')
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos.csv')
@@ -87,7 +87,9 @@ def _cargar_lookup_supervisores():
 
 
 def _normalizar_columnas(df):
-    """Normaliza nombres de columnas con encoding issues (Código/Descripción)."""
+    """Normaliza nombres de columnas con encoding issues (Código/Descripción) y espacios."""
+    # Primero strip espacios de todos los nombres
+    df.columns = df.columns.str.strip()
     col_map = {}
     for c in df.columns:
         cl = c.lower()
@@ -178,9 +180,6 @@ def main():
 
     df = df.dropna(subset=['vendedor'])
 
-    # Normalizar nombres de vendedor (dim_cliente → dim_vendedor)
-    df['vendedor'] = df['vendedor'].replace(NORMALIZAR_VENDEDOR)
-
     # Excluir vendedores que no son preventistas
     df = df[~df['vendedor'].isin(VENDEDORES_EXCLUIR)]
 
@@ -211,6 +210,9 @@ def main():
         df_cupos.loc[mask_cc, 'vendedor'].str.upper().map(lookup_sup).fillna('SIN SUPERVISOR')
     )
 
+    # Filtrar solo Casa Central (sucursal 1) — las demás sucursales no se usan por ahora
+    df_cupos = df_cupos[df_cupos['id_sucursal'] == 1]
+
     # Ordenar y guardar
     df_cupos = df_cupos[['vendedor', 'sucursal', 'supervisor', 'categoria', 'grupo_marca', 'cupo']]
     df_cupos = df_cupos.sort_values(['sucursal', 'vendedor', 'categoria', 'grupo_marca']).reset_index(drop=True)
@@ -224,5 +226,58 @@ def main():
     print(df_cupos.head(15).to_string(index=False))
 
 
+def _procesar_cobertura():
+    """Procesa cupos_cobertura.xlsx → data/cupos_cobertura.csv.
+
+    Lee el archivo Excel, agrupa por vendedor/marca/sucursal (un vendedor puede
+    tener múltiples rutas), y genera el CSV con cupos de cobertura por marca.
+    """
+    cobertura_path = os.path.join(BASE_DIR, 'cupos_cobertura.xlsx')
+    output_cobertura = os.path.join(os.path.dirname(__file__), '..', 'data', 'cupos_cobertura.csv')
+
+    print("\n--- Procesando cupos de cobertura ---")
+    df = pd.read_excel(cobertura_path)
+
+    # Strip column names (ej: "CUPO " → "CUPO")
+    df.columns = df.columns.str.strip()
+
+    # Drop rows where MARCA is NaN
+    antes = len(df)
+    df = df.dropna(subset=['MARCA'])
+    print(f"  Filas descartadas (MARCA NaN): {antes - len(df)}")
+
+    # Mapear ZONA: "VALLE SALTA" → "1 - CASA CENTRAL"
+    df['ZONA'] = df['ZONA'].replace('VALLE SALTA', '1 - CASA CENTRAL')
+
+    # Agrupar por vendedor/marca/sucursal y sumar CUPO
+    df_cupos = (
+        df.groupby(['Descripción Vendedor', 'MARCA', 'ZONA'], as_index=False)
+        ['CUPO'].sum()
+    )
+
+    # Redondear a enteros
+    df_cupos['CUPO'] = df_cupos['CUPO'].round(0).astype(int)
+
+    # Renombrar columnas
+    df_cupos = df_cupos.rename(columns={
+        'Descripción Vendedor': 'vendedor',
+        'MARCA': 'marca',
+        'ZONA': 'sucursal',
+        'CUPO': 'cupo_cobertura',
+    })
+
+    # Ordenar y guardar
+    df_cupos = df_cupos.sort_values(['sucursal', 'vendedor', 'marca']).reset_index(drop=True)
+    df_cupos.to_csv(output_cobertura, index=False)
+
+    print(f"  CSV generado: {output_cobertura}")
+    print(f"  {len(df_cupos)} filas")
+    print(f"  {df_cupos['vendedor'].nunique()} vendedores")
+    print(f"  {df_cupos['marca'].nunique()} marcas: {sorted(df_cupos['marca'].unique().tolist())}")
+    print(f"\n  Muestra:")
+    print(df_cupos.head(15).to_string(index=False))
+
+
 if __name__ == '__main__':
     main()
+    _procesar_cobertura()

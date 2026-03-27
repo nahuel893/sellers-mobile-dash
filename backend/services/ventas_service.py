@@ -61,7 +61,7 @@ def _resumen_desde_datos(datos, categoria='CERVEZAS'):
     total_tendencia = calcular_tendencia(total_ventas)
 
     if not fila_total.empty and categoria == 'CERVEZAS':
-        total_cupo = int(fila_total.iloc[0]['cupo'])
+        total_cupo = int(fila_total['cupo'].sum())
     else:
         total_cupo = int(datos_marcas['cupo'].sum())
 

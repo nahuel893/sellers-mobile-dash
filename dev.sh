@@ -31,6 +31,13 @@ cleanup() {
 
 trap cleanup INT TERM
 
+# ── Regenerar cupos desde Excel ──────────────────────────────────────────────
+echo "[cupos] Regenerando cupos.csv desde Excel..."
+"$ROOT/backend/.venv/bin/python" "$ROOT/scripts/procesar_cupos.py" 2>&1 | \
+    while IFS= read -r line; do echo "[cupos] $line"; done
+echo "[cupos] Listo."
+echo ""
+
 # ── Levantar backend ──────────────────────────────────────────────────────────
 (
     cd "$ROOT/backend"
