@@ -41,26 +41,39 @@ export default function CategoryCarousel({
     trackRef.current.scrollTo({ left: index * slideWidth, behavior: 'smooth' });
   };
 
-  const categoryKeys = CATEGORIES.filter((key) => key in categories);
+  // Agrupar MULTICCU + AGUAS_DANONE en un solo slide
+  const slides: { key: string; categories: CategoryKey[] }[] = [];
+  if ('CERVEZAS' in categories) {
+    slides.push({ key: 'CERVEZAS', categories: ['CERVEZAS'] });
+  }
+  const otros: CategoryKey[] = (['MULTICCU', 'AGUAS_DANONE'] as CategoryKey[]).filter(
+    (k) => k in categories
+  );
+  if (otros.length > 0) {
+    slides.push({ key: 'OTROS', categories: otros });
+  }
 
   return (
     <div>
       <div ref={trackRef} className="carousel-track" onScroll={handleScroll}>
-        {categoryKeys.map((key) => (
-          <div key={key} className="carousel-slide">
-            <CategorySlide
-              categoryKey={key as CategoryKey}
-              data={categories[key]}
-            />
+        {slides.map((slide) => (
+          <div key={slide.key} className="carousel-slide">
+            {slide.categories.map((key) => (
+              <CategorySlide
+                key={key}
+                categoryKey={key}
+                data={categories[key]}
+              />
+            ))}
           </div>
         ))}
       </div>
       {/* Dots */}
-      {categoryKeys.length > 1 && (
+      {slides.length > 1 && (
         <div className="flex justify-center gap-2 py-2">
-          {categoryKeys.map((key, i) => (
+          {slides.map((slide, i) => (
             <button
-              key={key}
+              key={slide.key}
               onClick={() => goToSlide(i)}
               className={`w-2 h-2 rounded-full transition-all ${
                 i === activeIndex

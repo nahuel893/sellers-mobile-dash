@@ -5,9 +5,11 @@ import CategoryToggle from '../components/CategoryToggle';
 import VendorIndex from '../components/VendorIndex';
 import SummaryBlock from '../components/SummaryBlock';
 import VendorBlock from '../components/VendorBlock';
+import CoberturaSection from '../components/CoberturaSection';
 import { useSucursales } from '../hooks/use-sucursales';
 import { useSupervisores } from '../hooks/use-supervisores';
 import { useDashboard } from '../hooks/use-dashboard';
+import { useCobertura } from '../hooks/use-cobertura';
 
 export default function HomePage() {
   const [sucursal, setSucursal] = useState<string | null>(null);
@@ -17,6 +19,7 @@ export default function HomePage() {
   const { data: sucursales } = useSucursales();
   const { data: supervisores, isLoading: isLoadingSupervisores } = useSupervisores(sucursal);
   const { data: dashboard, isLoading: isLoadingDashboard } = useDashboard(supervisor, sucursal);
+  const { data: cobertura } = useCobertura(sucursal ?? undefined, supervisor ?? undefined);
 
   function handleSucursalChange(value: string) {
     setSucursal(value);
@@ -46,19 +49,21 @@ export default function HomePage() {
 
   return (
     <>
-      <Header />
+      <div className="sticky top-0 z-10 bg-[#f0f2f5]">
+        <Header />
 
-      <Filters
-        sucursales={sucursales ?? []}
-        selectedSucursal={sucursal}
-        onSucursalChange={handleSucursalChange}
-        supervisores={supervisores ?? []}
-        selectedSupervisor={supervisor}
-        onSupervisorChange={handleSupervisorChange}
-        isLoadingSupervisores={isLoadingSupervisores}
-      />
+        <Filters
+          sucursales={sucursales ?? []}
+          selectedSucursal={sucursal}
+          onSucursalChange={handleSucursalChange}
+          supervisores={supervisores ?? []}
+          selectedSupervisor={supervisor}
+          onSupervisorChange={handleSupervisorChange}
+          isLoadingSupervisores={isLoadingSupervisores}
+        />
 
-      <CategoryToggle activeIndex={globalSlide} onChange={setGlobalSlide} />
+        <CategoryToggle activeIndex={globalSlide} onChange={setGlobalSlide} />
+      </div>
 
       {isLoadingDashboard && (
         <p className="text-center text-sm text-gray-400 py-8">Cargando datos...</p>
@@ -91,6 +96,10 @@ export default function HomePage() {
               globalSlideIndex={globalSlide}
             />
           ))}
+
+          {cobertura && cobertura.vendedores.length > 0 && (
+            <CoberturaSection vendedores={cobertura.vendedores} />
+          )}
         </>
       )}
     </>

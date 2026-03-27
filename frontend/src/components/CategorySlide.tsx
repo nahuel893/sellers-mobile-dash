@@ -1,6 +1,7 @@
 import type { CategoryData } from '../types/api';
 import type { CategoryKey } from '../lib/constants';
 import { BRAND_ORDER, CATEGORY_NAMES } from '../lib/constants';
+import { useDiasHabiles } from '../hooks/use-dias-habiles';
 import GaugeTotal from './GaugeTotal';
 import RingMarca from './RingMarca';
 
@@ -12,6 +13,7 @@ interface CategorySlideProps {
 export default function CategorySlide({ categoryKey, data }: CategorySlideProps) {
   const { resumen, datos } = data;
   const title = `Total ${CATEGORY_NAMES[categoryKey]}`;
+  const { data: dias } = useDiasHabiles();
 
   // Para CERVEZAS: mostrar desglose por marca en orden
   const brandCards =
@@ -21,21 +23,24 @@ export default function CategorySlide({ categoryKey, data }: CategorySlideProps)
 
   return (
     <div className="px-2 py-3">
+      <h3 className="text-sm font-bold text-brand-dark uppercase tracking-wider mb-2 px-1">
+        {title}
+      </h3>
       <GaugeTotal
-        title={title}
         pctTendencia={resumen.pct_tendencia}
         ventas={resumen.ventas}
         cupo={resumen.cupo}
         falta={resumen.falta}
         tendencia={resumen.tendencia}
+        diasRestantes={dias?.restantes}
       />
 
       {brandCards.length > 0 && (
         <>
-          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2 px-1">
+          <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2 px-1">
             Detalle por Marca
           </h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {brandCards.map((d) => (
               <RingMarca
                 key={d!.grupo_marca}
@@ -44,6 +49,7 @@ export default function CategorySlide({ categoryKey, data }: CategorySlideProps)
                 ventas={d!.ventas}
                 cupo={d!.cupo}
                 falta={d!.falta}
+                diasRestantes={dias?.restantes}
               />
             ))}
           </div>
