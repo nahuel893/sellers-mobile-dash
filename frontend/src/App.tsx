@@ -4,6 +4,7 @@ import VendedorPage from './pages/VendedorPage';
 import SupervisorPage from './pages/SupervisorPage';
 import SucursalPage from './pages/SucursalPage';
 import MapaPage from './pages/MapaPage';
+import PaneoPage from './pages/PaneoPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/supervisor/:slug" element={<SupervisorPage />} />
         <Route path="/sucursal/:id" element={<SucursalPage />} />
         <Route path="/mapa/:slug" element={<MapaPage />} />
+        <Route path="/paneo" element={<PaneoPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
