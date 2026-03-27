@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router';
+import { useSearchParams, useParams } from 'react-router';
 import Header from '../components/Header';
 import CategorySlide from '../components/CategorySlide';
 import CoberturaSection from '../components/CoberturaSection';
@@ -8,11 +8,15 @@ import { useSupervisores } from '../hooks/use-supervisores';
 import { useDashboard } from '../hooks/use-dashboard';
 import { useCobertura } from '../hooks/use-cobertura';
 import { CATEGORIES, CATEGORY_NAMES, type CategoryKey } from '../lib/constants';
+import { fromSlug } from '../lib/format';
 import type { VendedorListItem } from '../types/api';
 
 const DEFAULT_INTERVAL = 10;
 
 export default function PaneoPage() {
+  const { slug } = useParams<{ slug?: string }>();
+  const fixedSupervisor = slug ? fromSlug(slug) : null;
+
   const [params] = useSearchParams();
   const interval = (parseInt(params.get('intervalo') ?? '', 10) || DEFAULT_INTERVAL) * 1000;
 
@@ -24,7 +28,12 @@ export default function PaneoPage() {
   const { data: sucursales } = useSucursales();
   const { data: supervisores } = useSupervisores(sucursal);
 
-  const currentSup = supervisores?.[supIdx] ?? null;
+  // For fixed supervisor mode, use that supervisor; otherwise cycle
+  const supList = fixedSupervisor
+    ? [fixedSupervisor]
+    : supervisores ?? [];
+
+  const currentSup = supList[supIdx] ?? null;
   const { data: dashboard } = useDashboard(currentSup, sucursal);
   const { data: cobertura } = useCobertura(sucursal ?? undefined, currentSup ?? undefined);
 
@@ -39,32 +48,28 @@ export default function PaneoPage() {
   const currentVend = step === 'vendedor' ? vendedores[vendIdx] : null;
 
   const advance = useCallback(() => {
-    if (!supervisores?.length) return;
+    if (!supList.length) return;
 
     if (step === 'supervisor') {
-      // Move to first vendor of this supervisor
       if (vendedores.length > 0) {
         setStep('vendedor');
         setVendIdx(0);
       } else {
-        // No vendors, skip to next supervisor
-        const nextSup = (supIdx + 1) % supervisores.length;
+        const nextSup = (supIdx + 1) % supList.length;
         setSupIdx(nextSup);
       }
     } else {
-      // Next vendor
       const nextVend = vendIdx + 1;
       if (nextVend < vendedores.length) {
         setVendIdx(nextVend);
       } else {
-        // Move to next supervisor
-        const nextSup = (supIdx + 1) % supervisores.length;
+        const nextSup = (supIdx + 1) % supList.length;
         setSupIdx(nextSup);
         setStep('supervisor');
         setVendIdx(0);
       }
     }
-  }, [step, supIdx, vendIdx, supervisores, vendedores]);
+  }, [step, supIdx, vendIdx, supList, vendedores]);
 
   // Auto-advance timer
   useEffect(() => {
@@ -74,9 +79,7 @@ export default function PaneoPage() {
   }, [advance, interval, dashboard]);
 
   // Progress info
-  const totalSteps = supervisores
-    ? supervisores.length + vendedores.length
-    : 0;
+  const totalSteps = 1 + vendedores.length; // supervisor + its vendors
   const currentStep = step === 'supervisor' ? 1 : vendIdx + 2;
 
   return (

@@ -17,6 +17,7 @@ export default function App() {
         <Route path="/sucursal/:id" element={<SucursalPage />} />
         <Route path="/mapa/:slug" element={<MapaPage />} />
         <Route path="/paneo" element={<PaneoPage />} />
+        <Route path="/supervisor/:slug/paneo" element={<PaneoPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
