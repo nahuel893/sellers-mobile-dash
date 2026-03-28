@@ -27,7 +27,7 @@ export default function GaugeTotal({
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 xl:flex xl:items-center xl:gap-8 xl:p-6">
-      <div className="mx-auto w-[260px] xl:w-[360px] xl:flex-shrink-0">
+      <div className="mx-auto w-[260px] xl:w-[240px] xl:flex-shrink-0">
         <GaugeSvg
           value={pctTendencia}
           color={color}
@@ -35,7 +35,7 @@ export default function GaugeTotal({
           className="w-full"
         />
       </div>
-      <div className="flex gap-3 mt-3 xl:mt-0 xl:flex-1 xl:flex-wrap">
+      <div className="flex flex-wrap gap-3 mt-3 xl:mt-0 xl:flex-1">
         <MetricBox label="Vendido" value={fmtNum(ventas)} />
         <MetricBox label="Cupo" value={fmtNum(cupo)} />
         <MetricBox label="Falta" value={fmtNum(falta)} className="text-perf-red" />

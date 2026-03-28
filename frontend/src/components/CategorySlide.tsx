@@ -40,7 +40,7 @@ export default function CategorySlide({ categoryKey, data }: CategorySlideProps)
           <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2 px-1">
             Detalle por Marca
           </h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {brandCards.map((d) => (
               <RingMarca
                 key={d!.grupo_marca}
