@@ -14,6 +14,14 @@ const PLATFORM_CARDS: DashboardCardDef[] = [
     icon: '📊',
     allowedRoles: undefined,
   },
+  {
+    id: 'admin',
+    title: 'Administración',
+    description: 'Gestión de usuarios, roles y permisos de la plataforma.',
+    href: '/admin/usuarios',
+    icon: '⚙️',
+    allowedRoles: ['admin'],
+  },
 ];
 
 export default function PlatformHome() {

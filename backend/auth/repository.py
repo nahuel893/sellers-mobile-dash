@@ -190,3 +190,200 @@ def revoke_all_user_tokens(user_id: int, conn=None) -> None:
     finally:
         if own_conn:
             release_connection(conn)
+
+
+# ---------------------------------------------------------------------------
+# Admin CRUD — Users
+# ---------------------------------------------------------------------------
+
+def list_users(conn=None) -> list[dict]:
+    """Return all users joined with their role name, ordered by username."""
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        sql = """
+            SELECT u.id, u.username, u.full_name, u.is_active,
+                   u.role_id, r.name AS role_name,
+                   u.created_at
+            FROM auth.users u
+            JOIN auth.roles r ON u.role_id = r.id
+            ORDER BY u.username
+        """
+        with _cursor(conn) as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return [dict(row) for row in rows]
+    finally:
+        if own_conn:
+            release_connection(conn)
+
+
+def get_user_by_id(user_id: int, conn=None) -> dict | None:
+    """Fetch a single user row joined with its role name, or None if not found."""
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        sql = """
+            SELECT u.*, r.name AS role_name
+            FROM auth.users u
+            JOIN auth.roles r ON u.role_id = r.id
+            WHERE u.id = %s
+        """
+        with _cursor(conn) as cur:
+            cur.execute(sql, (user_id,))
+            row = cur.fetchone()
+            return dict(row) if row is not None else None
+    finally:
+        if own_conn:
+            release_connection(conn)
+
+
+def create_user(
+    username: str,
+    password_hash: str,
+    full_name: str,
+    role_id: int,
+    conn=None,
+) -> int:
+    """Insert a new user and return its generated id.
+
+    Raises psycopg2.errors.UniqueViolation when username already exists
+    (caller should catch and convert to HTTP 409).
+    """
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        sql = """
+            INSERT INTO auth.users (username, password_hash, full_name, role_id)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """
+        with _cursor(conn) as cur:
+            cur.execute(sql, (username, password_hash, full_name, role_id))
+            row = cur.fetchone()
+        conn.commit()
+        return row["id"]
+    finally:
+        if own_conn:
+            release_connection(conn)
+
+
+def update_user(
+    user_id: int,
+    full_name: str,
+    role_id: int,
+    is_active: bool,
+    conn=None,
+) -> None:
+    """Update user's full_name, role_id, and is_active."""
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        sql = """
+            UPDATE auth.users
+            SET full_name = %s, role_id = %s, is_active = %s
+            WHERE id = %s
+        """
+        with _cursor(conn) as cur:
+            cur.execute(sql, (full_name, role_id, is_active, user_id))
+        conn.commit()
+    finally:
+        if own_conn:
+            release_connection(conn)
+
+
+def set_user_password(user_id: int, password_hash: str, conn=None) -> None:
+    """Replace the stored password hash for a user."""
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        sql = "UPDATE auth.users SET password_hash = %s WHERE id = %s"
+        with _cursor(conn) as cur:
+            cur.execute(sql, (password_hash, user_id))
+        conn.commit()
+    finally:
+        if own_conn:
+            release_connection(conn)
+
+
+def replace_user_sucursales(user_id: int, sucursal_ids: list[int], conn=None) -> None:
+    """Replace all sucursal assignments for a user (delete-then-insert).
+
+    This is an atomic replace: all previous assignments are deleted and the
+    provided list is inserted in their place.
+    """
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        with _cursor(conn) as cur:
+            cur.execute(
+                "DELETE FROM auth.user_sucursales WHERE user_id = %s",
+                (user_id,),
+            )
+            for sid in sucursal_ids:
+                cur.execute(
+                    "INSERT INTO auth.user_sucursales (user_id, id_sucursal) VALUES (%s, %s)",
+                    (user_id, sid),
+                )
+        conn.commit()
+    finally:
+        if own_conn:
+            release_connection(conn)
+
+
+# ---------------------------------------------------------------------------
+# Admin CRUD — Roles
+# ---------------------------------------------------------------------------
+
+def list_roles(conn=None) -> list[dict]:
+    """Return all roles from auth.roles."""
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        sql = "SELECT id, name FROM auth.roles ORDER BY id"
+        with _cursor(conn) as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+            return [dict(row) for row in rows]
+    finally:
+        if own_conn:
+            release_connection(conn)
+
+
+def get_role_by_name(name: str, conn=None) -> dict | None:
+    """Return a role dict by name, or None if not found."""
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
+
+    try:
+        sql = "SELECT id, name FROM auth.roles WHERE name = %s"
+        with _cursor(conn) as cur:
+            cur.execute(sql, (name,))
+            row = cur.fetchone()
+            return dict(row) if row is not None else None
+    finally:
+        if own_conn:
+            release_connection(conn)

@@ -14,6 +14,7 @@ import {
   setAccessTokenSetter,
   setAuthFailureHandler,
 } from '../lib/api-client';
+import { setAdminTokenGetter } from '../lib/admin-api';
 
 // ---------------------------------------------------------------------------
 // Context shape
@@ -42,11 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  // Register module-level setters so api-client can attach the token to requests
-  // and call back into this context on auth failure.
+  // Register module-level setters so api-client (and admin-api) can attach the
+  // token to requests and call back into this context on auth failure.
   useEffect(() => {
     setAccessTokenGetter(() => accessToken);
     setAccessTokenSetter((t) => setAccessToken(t));
+    setAdminTokenGetter(() => accessToken);
     setAuthFailureHandler(() => {
       setUser(null);
       setAccessToken(null);

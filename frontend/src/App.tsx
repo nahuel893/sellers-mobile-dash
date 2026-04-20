@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { RoleGuard } from './components/RoleGuard';
 import LoginPage from './pages/LoginPage';
 import PlatformHome from './pages/PlatformHome';
 import HomePage from './pages/HomePage';
@@ -9,6 +10,7 @@ import SupervisorPage from './pages/SupervisorPage';
 import SucursalPage from './pages/SucursalPage';
 import MapaPage from './pages/MapaPage';
 import PaneoPage from './pages/PaneoPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 export default function App() {
@@ -32,6 +34,16 @@ export default function App() {
             <Route path="/sellers/mapa/:slug" element={<MapaPage />} />
             <Route path="/sellers/paneo" element={<PaneoPage />} />
             <Route path="/sellers/supervisor/:slug/paneo" element={<PaneoPage />} />
+
+            {/* Admin routes — restricted to admin role */}
+            <Route
+              path="/admin/usuarios"
+              element={
+                <RoleGuard roles={['admin']}>
+                  <AdminUsersPage />
+                </RoleGuard>
+              }
+            />
 
             <Route path="*" element={<NotFoundPage />} />
           </Route>

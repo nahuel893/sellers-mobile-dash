@@ -126,3 +126,49 @@ export interface TokenRefreshResponse {
   access_token: string;
   token_type: 'bearer';
 }
+
+// --- Admin types ---
+
+/** Matches auth/admin_models.py UserListItem */
+export interface AdminUser {
+  id: number;
+  username: string;
+  full_name: string;
+  role: Role;
+  is_active: boolean;
+  sucursales: number[];
+}
+
+/** Matches auth/admin_models.py UserCreate */
+export interface AdminUserCreate {
+  username: string;
+  password: string;
+  full_name: string;
+  role: Role;
+  sucursales?: number[];
+}
+
+/** Matches auth/admin_models.py UserUpdate — all optional */
+export interface AdminUserUpdate {
+  full_name?: string;
+  role?: Role;
+  is_active?: boolean;
+  sucursales?: number[];
+}
+
+/** Matches auth/admin_models.py UserPasswordUpdate */
+export interface AdminUserPasswordUpdate {
+  password: string;
+}
+
+/** Matches auth/admin_models.py RoleItem */
+export interface RoleItem {
+  id: number;
+  name: string;
+}
+
+/** Matches auth/admin_models.py SucursalItem */
+export interface SucursalAdminItem {
+  id: number;
+  descripcion: string;
+}
