@@ -13,6 +13,8 @@ import PaneoPage from './pages/PaneoPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import NotFoundPage from './pages/NotFoundPage';
 import VentasMapaPage from './pages/ventas-mapa/VentasMapaPage';
+import VentasClientePage from './pages/ventas-mapa/VentasClientePage';
+import VentasClientesPage from './pages/ventas-mapa/VentasClientesPage';
 
 export default function App() {
   return (
@@ -93,6 +95,8 @@ export default function App() {
 
           {/* Ventas Mapa — full-screen dark theme (NO wrapper con max-width) */}
           <Route path="/ventas" element={<VentasMapaPage />} />
+          <Route path="/ventas/cliente/:id" element={<VentasClientePage />} />
+          <Route path="/ventas/clientes" element={<VentasClientesPage />} />
 
           {/* Admin routes — restricted to admin role */}
           <Route

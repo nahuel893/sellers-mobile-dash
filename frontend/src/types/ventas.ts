@@ -189,3 +189,49 @@ export interface VentasComproParams {
   ruta?: string;
   preventista?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Detalle de cliente (Fase 8)
+// ---------------------------------------------------------------------------
+
+export interface VentasClienteInfo {
+  id_cliente: number;
+  fantasia: string | null;
+  razon_social: string;
+  localidad: string | null;
+  canal: string | null;
+  sucursal: string | null;
+  preventista_fv1: string | null;
+  ruta_fv1: string | null;
+  lista_precio: string | null;
+  latitud: number | null;
+  longitud: number | null;
+}
+
+export interface VentasClienteKPIs {
+  bultos_mes: number;
+  facturacion_mes: number;
+  documentos_mes: number;
+}
+
+/**
+ * Fila de la tabla jerárquica.
+ * Niveles por strings vacíos:
+ * - Genérico:  marca === '' && articulo === ''
+ * - Marca:     articulo === ''  (marca !== '')
+ * - Artículo:  ninguno vacío
+ */
+export interface VentasClienteTabla {
+  generico: string;
+  marca: string;
+  articulo: string;
+  id_articulo: number;
+  meses: Record<string, number>;  // "YYYY-MM" -> bultos
+  total: number;
+}
+
+export interface VentasClienteDetalle {
+  info: VentasClienteInfo;
+  kpis: VentasClienteKPIs;
+  tabla: VentasClienteTabla[];
+}

@@ -202,3 +202,129 @@ class TestBuscarClientes:
 
         assert r.status_code == 200
         assert captured_limit == [25]
+
+
+# ---------------------------------------------------------------------------
+# Tests de GET /api/ventas-cliente/{id}
+# ---------------------------------------------------------------------------
+
+def _make_detalle_response(**kwargs) -> dict:
+    """Respuesta completa de get_cliente_detalle."""
+    defaults = {
+        "info": {
+            "id_cliente": 42,
+            "fantasia": "Bar El Toro",
+            "razon_social": "JUAN PEREZ SRL",
+            "localidad": "Salta",
+            "canal": "CAFETERIA",
+            "sucursal": "Salta Capital",
+            "preventista_fv1": "Pedro García",
+            "ruta_fv1": "1|5",
+            "lista_precio": "Lista A",
+            "latitud": -24.7,
+            "longitud": -65.4,
+        },
+        "kpis": {
+            "bultos_mes": 120,
+            "facturacion_mes": 85000.50,
+            "documentos_mes": 3,
+        },
+        "tabla": [],
+    }
+    defaults.update(kwargs)
+    return defaults
+
+
+class TestGetClienteDetalle:
+    def _headers(self, role: str = "admin") -> dict:
+        return {"Authorization": f"Bearer {_make_token(role_name=role)}"}
+
+    def test_returns_200_with_valid_id(self, client, monkeypatch):
+        """GET /{id} con cliente existente → 200."""
+        _mock_auth(monkeypatch)
+        detalle = _make_detalle_response()
+
+        with patch("routers.ventas_cliente.get_connection"), \
+             patch("routers.ventas_cliente.release_connection"), \
+             patch("routers.ventas_cliente.get_cliente_detalle", return_value=detalle):
+            r = client.get("/api/ventas-cliente/42", headers=self._headers())
+
+        assert r.status_code == 200
+
+    def test_response_has_info_kpis_tabla(self, client, monkeypatch):
+        """Respuesta contiene las secciones info, kpis, tabla."""
+        _mock_auth(monkeypatch)
+        detalle = _make_detalle_response()
+
+        with patch("routers.ventas_cliente.get_connection"), \
+             patch("routers.ventas_cliente.release_connection"), \
+             patch("routers.ventas_cliente.get_cliente_detalle", return_value=detalle):
+            r = client.get("/api/ventas-cliente/42", headers=self._headers())
+
+        data = r.json()
+        assert "info" in data
+        assert "kpis" in data
+        assert "tabla" in data
+
+    def test_info_fields_correct(self, client, monkeypatch):
+        """Campos de info son los esperados."""
+        _mock_auth(monkeypatch)
+        detalle = _make_detalle_response()
+
+        with patch("routers.ventas_cliente.get_connection"), \
+             patch("routers.ventas_cliente.release_connection"), \
+             patch("routers.ventas_cliente.get_cliente_detalle", return_value=detalle):
+            r = client.get("/api/ventas-cliente/42", headers=self._headers())
+
+        info = r.json()["info"]
+        assert info["id_cliente"] == 42
+        assert info["fantasia"] == "Bar El Toro"
+
+    def test_cliente_not_found_returns_404(self, client, monkeypatch):
+        """get_cliente_detalle lanza 404 → se propaga al cliente."""
+        _mock_auth(monkeypatch)
+        from fastapi import HTTPException
+
+        with patch("routers.ventas_cliente.get_connection"), \
+             patch("routers.ventas_cliente.release_connection"), \
+             patch(
+                "routers.ventas_cliente.get_cliente_detalle",
+                side_effect=HTTPException(status_code=404, detail="Cliente no encontrado"),
+             ):
+            r = client.get("/api/ventas-cliente/9999", headers=self._headers())
+
+        assert r.status_code == 404
+
+    def test_forbidden_sucursal_returns_403(self, client, monkeypatch):
+        """get_cliente_detalle lanza 403 → se propaga."""
+        _mock_auth(monkeypatch)
+        from fastapi import HTTPException
+
+        with patch("routers.ventas_cliente.get_connection"), \
+             patch("routers.ventas_cliente.release_connection"), \
+             patch(
+                "routers.ventas_cliente.get_cliente_detalle",
+                side_effect=HTTPException(status_code=403, detail="Acceso denegado"),
+             ):
+            r = client.get("/api/ventas-cliente/42", headers=self._headers("vendedor"))
+
+        assert r.status_code == 403
+
+    def test_without_token_returns_401(self, client):
+        """Sin token → 401."""
+        r = client.get("/api/ventas-cliente/42")
+        assert r.status_code == 401
+
+    def test_db_error_returns_503(self, client, monkeypatch):
+        """Error inesperado de DB → 503."""
+        _mock_auth(monkeypatch)
+
+        with patch("routers.ventas_cliente.get_connection"), \
+             patch("routers.ventas_cliente.release_connection"), \
+             patch(
+                "routers.ventas_cliente.get_cliente_detalle",
+                side_effect=Exception("DB down"),
+             ):
+            r = client.get("/api/ventas-cliente/42", headers=self._headers())
+
+        assert r.status_code == 503

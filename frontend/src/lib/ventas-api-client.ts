@@ -12,6 +12,7 @@ import type {
   VentasCompro,
   VentasComproParams,
   VentasClienteBusqueda,
+  VentasClienteDetalle,
 } from '../types/ventas';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -115,6 +116,9 @@ export const ventasApi = {
 
   buscarClientes: (q: string, limit = 50) =>
     ventasFetch<VentasClienteBusqueda[]>('/api/ventas-cliente/buscar', { q, limit }),
+
+  getClienteDetalle: (id_cliente: number) =>
+    ventasFetch<VentasClienteDetalle>(`/api/ventas-cliente/${id_cliente}`),
 
   getCompro: (params: VentasComproParams) => {
     const q: Record<string, ParamValue> = {

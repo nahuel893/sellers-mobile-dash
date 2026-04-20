@@ -238,6 +238,26 @@ export default function VentasMapaPage() {
           Mapa de Ventas
         </h1>
 
+        {/* Buscar clientes */}
+        <Link
+          to="/ventas/clientes"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '5px 12px',
+            backgroundColor: DARK.surface,
+            border: `1px solid ${DARK.border}`,
+            borderRadius: '6px',
+            color: DARK.textSecondary,
+            fontSize: '12px',
+            textDecoration: 'none',
+            flexShrink: 0,
+          }}
+        >
+          🔍 Clientes
+        </Link>
+
         {/* Fechas aplicadas */}
         <span
           style={{

@@ -124,3 +124,53 @@ class VentasCompro(BaseModel):
     lon: float
     compro: bool
     ultima_compra: Optional[date] = None
+
+
+# ---------------------------------------------------------------------------
+# Detalle de cliente (Fase 8)
+# ---------------------------------------------------------------------------
+
+class VentasClienteInfo(BaseModel):
+    """Datos maestros del cliente."""
+    id_cliente: int
+    fantasia: Optional[str] = None
+    razon_social: str
+    localidad: Optional[str] = None
+    canal: Optional[str] = None
+    sucursal: Optional[str] = None
+    preventista_fv1: Optional[str] = None
+    ruta_fv1: Optional[str] = None
+    lista_precio: Optional[str] = None
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
+
+
+class VentasClienteKPIs(BaseModel):
+    """KPIs del cliente para el mes actual."""
+    bultos_mes: int
+    facturacion_mes: float
+    documentos_mes: int
+
+
+class VentasClienteTabla(BaseModel):
+    """
+    Fila de la tabla jerárquica de ventas por mes.
+
+    Niveles inferidos por strings vacíos:
+    - genérico: marca == '' AND articulo == ''
+    - marca:    articulo == ''   (marca != '')
+    - artículo: ninguno vacío
+    """
+    generico: str
+    marca: str
+    articulo: str
+    id_articulo: int
+    meses: dict[str, float]   # "YYYY-MM" -> bultos
+    total: float
+
+
+class VentasClienteDetalle(BaseModel):
+    """Respuesta completa del endpoint GET /api/ventas-cliente/{id}."""
+    info: VentasClienteInfo
+    kpis: VentasClienteKPIs
+    tabla: list[VentasClienteTabla]
