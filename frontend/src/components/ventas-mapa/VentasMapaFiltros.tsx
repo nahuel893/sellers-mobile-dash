@@ -3,7 +3,7 @@
  * Se abre desde la derecha. Sin cascada reactiva (Fase 3 simplification).
  * Todos los valores vienen de /api/ventas-filtros/opciones en una sola llamada.
  */
-import type { VentasFiltrosOpciones, VentasFiltrosState, VentasFV, VentasTipoSucursal, VentasZonasAgrupacion } from '../../types/ventas';
+import type { VentasFiltrosOpciones, VentasFiltrosState, VentasFV, VentasTipoSucursal, VentasZonasAgrupacion, CalorSubmodo } from '../../types/ventas';
 import { DARK } from '../../lib/ventas-constants';
 
 interface VentasMapaFiltrosProps {
@@ -14,6 +14,11 @@ interface VentasMapaFiltrosProps {
   onChange: (filtros: VentasFiltrosState) => void;
   onAplicar: () => void;
   onLimpiar: () => void;
+  /** Submodo activo cuando modo=calor */
+  calorSubmodo?: CalorSubmodo;
+  onCalorSubmodoChange?: (submodo: CalorSubmodo) => void;
+  /** Modo activo (para mostrar controles contextuales) */
+  modoActivo?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -182,6 +187,9 @@ export default function VentasMapaFiltros({
   onChange,
   onAplicar,
   onLimpiar,
+  calorSubmodo = 'difuso',
+  onCalorSubmodoChange,
+  modoActivo = 'burbujas',
 }: VentasMapaFiltrosProps) {
   const set = <K extends keyof VentasFiltrosState>(key: K, value: VentasFiltrosState[K]) => {
     onChange({ ...filtros, [key]: value });
@@ -397,6 +405,22 @@ export default function VentasMapaFiltros({
             value={filtros.zonas_agrupacion}
             onChange={(v) => set('zonas_agrupacion', v)}
           />
+
+          {/* Submodo calor — solo visible cuando el modo activo es "calor" */}
+          {modoActivo === 'calor' && onCalorSubmodoChange && (
+            <>
+              <SectionTitle>Modo Calor</SectionTitle>
+              <RadioGroup<CalorSubmodo>
+                label="Tipo de visualización"
+                options={[
+                  { value: 'difuso', label: 'Difuso (heatmap)' },
+                  { value: 'grilla', label: 'Grilla (hexágonos)' },
+                ]}
+                value={calorSubmodo}
+                onChange={onCalorSubmodoChange}
+              />
+            </>
+          )}
 
         </div>
 

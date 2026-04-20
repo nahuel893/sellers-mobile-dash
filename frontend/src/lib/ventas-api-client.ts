@@ -9,6 +9,8 @@ import type {
   VentasClientesParams,
   VentasZona,
   VentasZonasParams,
+  VentasCompro,
+  VentasComproParams,
 } from '../types/ventas';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -108,5 +110,21 @@ export const ventasApi = {
     if (params.genericos?.length) q.genericos = params.genericos;
     if (params.marcas?.length) q.marcas = params.marcas;
     return ventasFetch<VentasZona[]>('/api/ventas-mapa/zonas', q);
+  },
+
+  getCompro: (params: VentasComproParams) => {
+    const q: Record<string, ParamValue> = {
+      fecha_ini: params.fecha_ini,
+      fecha_fin: params.fecha_fin,
+    };
+    if (params.fv) q.fv = params.fv;
+    if (params.canal) q.canal = params.canal;
+    if (params.subcanal) q.subcanal = params.subcanal;
+    if (params.localidad) q.localidad = params.localidad;
+    if (params.lista_precio != null) q.lista_precio = params.lista_precio;
+    if (params.sucursal_id != null) q.sucursal_id = params.sucursal_id;
+    if (params.ruta) q.ruta = params.ruta;
+    if (params.preventista) q.preventista = params.preventista;
+    return ventasFetch<VentasCompro[]>('/api/ventas-mapa/compro', q);
   },
 };

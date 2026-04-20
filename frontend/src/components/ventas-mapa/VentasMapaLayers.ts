@@ -2,12 +2,14 @@
  * Factory de layers deck.gl para el mapa de ventas.
  */
 import { ScatterplotLayer, PolygonLayer } from '@deck.gl/layers';
-import type { VentasCliente, VentasZona } from '../../types/ventas';
+import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers';
+import type { VentasCliente, VentasZona, VentasCompro } from '../../types/ventas';
 import type { VentasMetrica } from '../../types/ventas';
 import {
   COLOR_SCALE_BURBUJAS,
   COLOR_SIN_VENTAS,
   ZONE_COLORS,
+  CALOR_COLOR_RANGE,
   interpolateColor,
   normalize,
   toRadius,
@@ -190,6 +192,115 @@ export function buildZonasLayer({
     updateTriggers: {
       getFillColor: [data.length],
       getLineColor: [data.length],
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Calor — HeatmapLayer (modo difuso)
+// ---------------------------------------------------------------------------
+
+/**
+ * Construye el HeatmapLayer (difuso) a partir de los clientes del mapa.
+ * Usa los mismos datos que buildClientesLayer — aggregation client-side.
+ */
+export function buildCalorLayer(
+  data: VentasCliente[],
+): HeatmapLayer<VentasCliente> {
+  return new HeatmapLayer<VentasCliente>({
+    id: 'ventas-calor-layer',
+    data,
+    pickable: false,
+    getPosition: (d) => [d.longitud, d.latitud],
+    getWeight: (d) => (d.bultos > 0 ? d.bultos : 1),
+    radiusPixels: 30,
+    intensity: 1,
+    threshold: 0.05,
+    colorRange: CALOR_COLOR_RANGE as [number, number, number][],
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Calor — HexagonLayer (modo grilla)
+// ---------------------------------------------------------------------------
+
+/**
+ * Construye el HexagonLayer (grilla hexagonal) a partir de los clientes del mapa.
+ * Aggregation client-side, color por densidad de clientes.
+ */
+export function buildCalorGrillaLayer(
+  data: VentasCliente[],
+): HexagonLayer<VentasCliente> {
+  return new HexagonLayer<VentasCliente>({
+    id: 'ventas-calor-grilla-layer',
+    data,
+    pickable: false,
+    extruded: false,
+    radius: 200,
+    elevationScale: 4,
+    getPosition: (d) => [d.longitud, d.latitud],
+    colorRange: CALOR_COLOR_RANGE as [number, number, number][],
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Compro / No-compro — ScatterplotLayer con verde/rojo
+// ---------------------------------------------------------------------------
+
+/** Color verde para clientes que compraron en el período (#27ae60) */
+const COLOR_COMPRO: [number, number, number, number] = [39, 174, 96, 220];
+/** Color rojo para clientes que NO compraron en el período (#e74c3c) */
+const COLOR_NO_COMPRO: [number, number, number, number] = [231, 76, 60, 180];
+
+export interface ComproHoverInfo {
+  object: VentasCompro | null;
+  x: number;
+  y: number;
+}
+
+interface BuildComproLayerOptions {
+  data: VentasCompro[];
+  onHover: (info: ComproHoverInfo) => void;
+}
+
+/**
+ * Construye el ScatterplotLayer para el modo compro/no-compro.
+ * Verde = compró en el período, Rojo = no compró.
+ * Radio fijo para que la lectura sea categórica, no cuantitativa.
+ */
+export function buildComproLayer({
+  data,
+  onHover,
+}: BuildComproLayerOptions): ScatterplotLayer<VentasCompro> {
+  return new ScatterplotLayer<VentasCompro>({
+    id: 'ventas-compro-layer',
+    data,
+    pickable: true,
+    opacity: 0.9,
+    stroked: true,
+    filled: true,
+    radiusMinPixels: 6,
+    radiusMaxPixels: 8,
+    lineWidthMinPixels: 0,
+
+    getPosition: (d) => [d.lon, d.lat],
+    getRadius: () => 7,
+
+    getFillColor: (d) => (d.compro ? COLOR_COMPRO : COLOR_NO_COMPRO),
+
+    getLineColor: () => [0, 0, 0, 40],
+    getLineWidth: () => 0.5,
+
+    onHover: (info) => {
+      onHover({
+        object: (info.object as VentasCompro) ?? null,
+        x: info.x,
+        y: info.y,
+      });
+    },
+
+    updateTriggers: {
+      getFillColor: [data.length],
     },
   });
 }

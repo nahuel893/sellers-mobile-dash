@@ -15,11 +15,21 @@ import { useState, useCallback, useReducer } from 'react';
 import VentasMapa from '../../components/ventas-mapa/VentasMapa';
 import VentasMapaFiltros from '../../components/ventas-mapa/VentasMapaFiltros';
 import VentasMapaMetricaToggle from '../../components/ventas-mapa/VentasMapaMetricaToggle';
+import VentasMapaModoToggle from '../../components/ventas-mapa/VentasMapaModoToggle';
 import VentasMapaZonasCards from '../../components/ventas-mapa/VentasMapaZonasCards';
 import { useVentasFiltros } from '../../hooks/ventas-mapa/use-ventas-filtros';
 import { useVentasClientes } from '../../hooks/ventas-mapa/use-ventas-clientes';
 import { useVentasZonas } from '../../hooks/ventas-mapa/use-ventas-zonas';
-import type { VentasFiltrosState, VentasClientesParams, VentasMetrica, VentasZonasParams } from '../../types/ventas';
+import { useVentasCompro } from '../../hooks/ventas-mapa/use-ventas-compro';
+import type {
+  VentasFiltrosState,
+  VentasClientesParams,
+  VentasMetrica,
+  VentasZonasParams,
+  VentasMapaModo,
+  CalorSubmodo,
+  VentasComproParams,
+} from '../../types/ventas';
 import { DARK, ZONE_BADGE_THRESHOLD } from '../../lib/ventas-constants';
 import { Link } from 'react-router';
 
@@ -104,12 +114,31 @@ function filtrosToZonasParams(filtros: VentasFiltrosState): VentasZonasParams | 
   };
 }
 
+function filtrosToComproParams(filtros: VentasFiltrosState): VentasComproParams {
+  return {
+    fecha_ini: filtros.fecha_ini,
+    fecha_fin: filtros.fecha_fin,
+    fv: filtros.fv !== 'AMBAS' ? filtros.fv : undefined,
+    canal: filtros.canal.length === 1 ? filtros.canal[0] : undefined,
+    subcanal: filtros.subcanal.length === 1 ? filtros.subcanal[0] : undefined,
+    localidad: filtros.localidad.length === 1 ? filtros.localidad[0] : undefined,
+    lista_precio: filtros.lista_precio.length === 1 ? filtros.lista_precio[0] : undefined,
+    sucursal_id: filtros.sucursal_ids.length === 1 ? filtros.sucursal_ids[0] : undefined,
+    ruta: filtros.rutas.length === 1 ? filtros.rutas[0] : undefined,
+    preventista: filtros.preventistas.length === 1 ? filtros.preventistas[0] : undefined,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Página
 // ---------------------------------------------------------------------------
 
 export default function VentasMapaPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Modo de visualización del mapa
+  const [modo, setModo] = useState<VentasMapaModo>('burbujas');
+  const [calorSubmodo, setCalorSubmodo] = useState<CalorSubmodo>('difuso');
 
   // Filtros del drawer (borrador)
   const [filtrosDraft, dispatchFiltros] = useReducer(filtrosReducer, FILTROS_INICIALES);
@@ -134,6 +163,12 @@ export default function VentasMapaPage() {
   // Zonas — solo se cargan si la agrupación no es OCULTAS
   const zonasParams = filtrosToZonasParams(filtrosAplicados);
   const { data: zonas, isLoading: zonasLoading } = useVentasZonas(zonasParams);
+
+  // Compro — solo se carga cuando modo=compro
+  const comproParams: VentasComproParams | null = modo === 'compro'
+    ? filtrosToComproParams(filtrosAplicados)
+    : null;
+  const { data: dataCompro, isLoading: comproLoading } = useVentasCompro(comproParams);
 
   const handleAplicar = useCallback(() => {
     setFiltrosAplicados(filtrosDraft);
@@ -211,9 +246,9 @@ export default function VentasMapaPage() {
         <div style={{ flex: 1 }} />
 
         {/* Estado de carga */}
-        {(clientesLoading || zonasLoading) && (
+        {(clientesLoading || zonasLoading || comproLoading) && (
           <span style={{ fontSize: '12px', color: DARK.textMuted }}>
-            {clientesLoading ? 'Cargando clientes…' : 'Cargando zonas…'}
+            {clientesLoading ? 'Cargando clientes…' : zonasLoading ? 'Cargando zonas…' : 'Cargando compro…'}
           </span>
         )}
 
@@ -230,11 +265,16 @@ export default function VentasMapaPage() {
           </span>
         )}
 
-        {/* Toggle métrica */}
-        <VentasMapaMetricaToggle
-          value={filtrosAplicados.metrica}
-          onChange={handleMetricaChange}
-        />
+        {/* Toggle modo */}
+        <VentasMapaModoToggle value={modo} onChange={setModo} />
+
+        {/* Toggle métrica — solo visible en modo burbujas */}
+        {modo === 'burbujas' && (
+          <VentasMapaMetricaToggle
+            value={filtrosAplicados.metrica}
+            onChange={handleMetricaChange}
+          />
+        )}
 
         {/* Botón filtros */}
         <button
@@ -286,6 +326,9 @@ export default function VentasMapaPage() {
               ? filtrosAplicados.zonas_agrupacion
               : undefined
           }
+          modo={modo}
+          calorSubmodo={calorSubmodo}
+          dataCompro={dataCompro ?? []}
         />
       </div>
 
@@ -303,6 +346,9 @@ export default function VentasMapaPage() {
         onChange={(f) => dispatchFiltros({ type: 'SET', filtros: f })}
         onAplicar={handleAplicar}
         onLimpiar={handleLimpiar}
+        modoActivo={modo}
+        calorSubmodo={calorSubmodo}
+        onCalorSubmodoChange={setCalorSubmodo}
       />
     </div>
   );

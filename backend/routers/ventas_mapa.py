@@ -10,8 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from auth.dependencies import get_current_active_user
 from auth.models import UserInDB
 from data.db import get_connection, release_connection
-from schemas_ventas_mapa import VentasCliente, VentasHoverCliente, VentasZona
+from schemas_ventas_mapa import VentasCliente, VentasHoverCliente, VentasZona, VentasCompro
 from services.ventas_mapa_service import get_clientes_mapa, get_hover_cliente
+from services.ventas_compro_service import get_compro_data
 from services.ventas_zonas_service import get_zonas, AGRUPACIONES_VALIDAS
 from ventas_constants import METRICAS_VALIDAS, FV_PREVENTA
 
@@ -117,6 +118,59 @@ def get_hover(
         raise HTTPException(status_code=503, detail="Error al consultar datos del cliente")
 
     return VentasHoverCliente(**data)
+
+
+@router.get("/compro", response_model=list[VentasCompro])
+def get_mapa_compro(
+    fecha_ini: date = Query(..., description="Fecha inicio (YYYY-MM-DD)"),
+    fecha_fin: date = Query(..., description="Fecha fin (YYYY-MM-DD)"),
+    fv: str = Query(FV_PREVENTA, description="Fuerza de ventas: '1' (preventa), '4' (autoventa), 'AMBAS'"),
+    canal: Optional[str] = Query(None, description="Filtro canal de marketing"),
+    subcanal: Optional[str] = Query(None, description="Filtro subcanal de marketing"),
+    localidad: Optional[str] = Query(None, description="Filtro localidad"),
+    lista_precio: Optional[int] = Query(None, description="Filtro lista de precio"),
+    sucursal_id: Optional[int] = Query(None, description="Filtro sucursal por ID"),
+    ruta: Optional[str] = Query(None, description="Ruta compuesta 'id_sucursal|id_ruta'"),
+    preventista: Optional[str] = Query(None, description="Nombre del preventista"),
+    current_user: UserInDB = Depends(get_current_active_user),
+):
+    """
+    Retorna clientes con coordenadas e indicador de compra en el período.
+
+    - compro=true → el cliente compró al menos una vez en [fecha_ini, fecha_fin]
+    - ultima_compra → MAX(fecha_comprobante) histórico (no limitado al período)
+    Solo clientes con latitud/longitud válidas. Respeta RBAC por sucursal.
+    """
+    if fecha_ini > fecha_fin:
+        raise HTTPException(status_code=400, detail="fecha_ini no puede ser posterior a fecha_fin")
+
+    try:
+        conn = get_connection()
+        try:
+            rows = get_compro_data(
+                conn=conn,
+                role_name=current_user.role_name,
+                sucursales_usuario=current_user.sucursales,
+                fecha_ini=fecha_ini,
+                fecha_fin=fecha_fin,
+                fv=fv,
+                canal=canal,
+                subcanal=subcanal,
+                localidad=localidad,
+                lista_precio=lista_precio,
+                sucursal_id=sucursal_id,
+                ruta=ruta,
+                preventista=preventista,
+            )
+        finally:
+            release_connection(conn)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Error cargando compro mapa: %s", exc)
+        raise HTTPException(status_code=503, detail="Error al consultar datos de compro")
+
+    return [VentasCompro(**row) for row in rows]
 
 
 @router.get("/zonas", response_model=list[VentasZona])

@@ -47,6 +47,29 @@ export const COLOR_SCALE_CALOR: ColorStop[] = [
   { stop: 1.00, color: [200, 0, 0] },
 ];
 
+// ---------------------------------------------------------------------------
+// Escala de calor en formato deck.gl Color[] (para HeatmapLayer / HexagonLayer)
+// ---------------------------------------------------------------------------
+
+/** Tipo Color de deck.gl: [r, g, b] o [r, g, b, a] */
+export type DeckColor = [number, number, number] | [number, number, number, number];
+
+/**
+ * Escala de color para capas de calor.
+ * Derivada de COLOR_SCALE_CALOR, convertida al formato colorRange de deck.gl.
+ * Orden: frío (azul) → caliente (rojo).
+ */
+export const CALOR_COLOR_RANGE: DeckColor[] = [
+  [0, 0, 150],
+  [0, 100, 255],
+  [0, 200, 255],
+  [0, 255, 150],
+  [200, 255, 0],
+  [255, 200, 0],
+  [255, 100, 0],
+  [200, 0, 0],
+];
+
 /** Threshold para colapsar badges de zonas (> N → una sola pill resumen) */
 export const ZONE_BADGE_THRESHOLD = 5;
 

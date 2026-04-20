@@ -1,6 +1,7 @@
 """Pydantic models para los endpoints ventas-mapa y ventas-filtros."""
 from __future__ import annotations
 
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel
@@ -95,3 +96,16 @@ class VentasZona(BaseModel):
     coords: list[list[float]]            # [[lon, lat], ...] — vértices del hull
     n_clientes: int                      # total de clientes en la zona (antes del outlier filter)
     metricas: VentasZonaMetricas
+
+
+# ---------------------------------------------------------------------------
+# Compro / No-compro (Fase 5)
+# ---------------------------------------------------------------------------
+
+class VentasCompro(BaseModel):
+    """Cliente con indicador de compra en el período y última fecha de compra histórica."""
+    id_cliente: int
+    lat: float
+    lon: float
+    compro: bool
+    ultima_compra: Optional[date] = None

@@ -74,6 +74,12 @@ export type VentasMetrica = 'bultos' | 'facturacion' | 'documentos';
 export type VentasFV = '1' | '4' | 'AMBAS';
 export type VentasTipoSucursal = 'TODAS' | 'SUCURSALES' | 'CASA_CENTRAL';
 
+/** Modo de visualización del mapa */
+export type VentasMapaModo = 'burbujas' | 'calor' | 'compro';
+
+/** Sub-modo dentro del modo calor */
+export type CalorSubmodo = 'difuso' | 'grilla';
+
 export interface VentasFiltrosState {
   fecha_ini: string;
   fecha_fin: string;
@@ -142,4 +148,30 @@ export interface VentasClientesParams {
   genericos?: string[];
   marcas?: string[];
   metrica: VentasMetrica;
+}
+
+// ---------------------------------------------------------------------------
+// Compro / No-compro (Fase 5)
+// ---------------------------------------------------------------------------
+
+export interface VentasCompro {
+  id_cliente: number;
+  lat: number;
+  lon: number;
+  compro: boolean;
+  ultima_compra: string | null;  // ISO date string o null
+}
+
+/** Parámetros para /api/ventas-mapa/compro (mismo pipeline de filtros que clientes, sin metrica) */
+export interface VentasComproParams {
+  fecha_ini: string;
+  fecha_fin: string;
+  fv?: string;
+  canal?: string;
+  subcanal?: string;
+  localidad?: string;
+  lista_precio?: number;
+  sucursal_id?: number;
+  ruta?: string;
+  preventista?: string;
 }
