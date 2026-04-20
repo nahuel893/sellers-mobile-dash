@@ -98,3 +98,31 @@ export interface Cliente {
   longitud: number;
   des_localidad: string | null;
 }
+
+// --- Auth types ---
+
+export type Role = 'admin' | 'gerente' | 'supervisor' | 'vendedor';
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  email: string;
+  role: Role;
+  nombre_completo: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: 'bearer';
+  user: AuthUser;
+}
+
+export interface TokenRefreshResponse {
+  access_token: string;
+  token_type: 'bearer';
+}
