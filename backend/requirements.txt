@@ -10,3 +10,5 @@ httpx>=0.28
 python-jose[cryptography]>=3.3
 passlib[bcrypt]>=1.7
 bcrypt>=3.1,<5.0  # passlib 1.7.x incompatible with bcrypt>=5 (API change)
+scipy>=1.13          # convex hull calculation for ventas-mapa zonas endpoint
+openpyxl>=3.1        # read visitados.xlsx in seed_visitas.py

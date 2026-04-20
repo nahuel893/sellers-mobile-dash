@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import type { AdminUser } from '../../types/api';
+import type { AdminUser, Role } from '../../types/api';
 import { useAdminRoles, useAdminSucursales, useCreateUser, useUpdateUser } from '../../hooks/use-admin-users';
 
 interface UserFormModalProps {
@@ -151,7 +151,7 @@ export default function UserFormModal({ user, onClose }: UserFormModalProps) {
           <Field label="Rol">
             <select
               value={form.role}
-              onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
+              onChange={(e) => setForm((p) => ({ ...p, role: e.target.value as Role }))}
               className="input-base"
             >
               {roles.map((r) => (
