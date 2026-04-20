@@ -15,6 +15,14 @@ const PLATFORM_CARDS: DashboardCardDef[] = [
     allowedRoles: undefined,
   },
   {
+    id: 'ventas-mapa',
+    title: 'Mapa de Ventas',
+    description: 'Distribución geográfica de ventas por cliente, con filtros por período, canal y preventista.',
+    href: '/ventas',
+    icon: '🗺️',
+    allowedRoles: undefined,
+  },
+  {
     id: 'admin',
     title: 'Administración',
     description: 'Gestión de usuarios, roles y permisos de la plataforma.',

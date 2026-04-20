@@ -15,6 +15,7 @@ import {
   setAuthFailureHandler,
 } from '../lib/api-client';
 import { setAdminTokenGetter } from '../lib/admin-api';
+import { setVentasTokenGetter } from '../lib/ventas-api-client';
 
 // ---------------------------------------------------------------------------
 // Context shape
@@ -49,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessTokenGetter(() => accessToken);
     setAccessTokenSetter((t) => setAccessToken(t));
     setAdminTokenGetter(() => accessToken);
+    setVentasTokenGetter(() => accessToken);
     setAuthFailureHandler(() => {
       setUser(null);
       setAccessToken(null);
