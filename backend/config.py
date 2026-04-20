@@ -82,6 +82,33 @@ NORMALIZAR_VENDEDOR = {}
 # Vendedores a excluir (aparecen en dim_cliente pero no son preventistas)
 VENDEDORES_EXCLUIR = []
 
+# --- Auth / JWT configuration (loaded from environment variables) ---
+import os as _os
+
+ENVIRONMENT: str = _os.getenv("ENVIRONMENT", "development")
+
+_raw_jwt_secret = _os.getenv("JWT_SECRET_KEY")
+if _raw_jwt_secret is None:
+    if ENVIRONMENT == "production":
+        raise ValueError(
+            "JWT_SECRET_KEY environment variable is required in production. "
+            "Set it to a long, random secret before starting the server."
+        )
+    # Dev/test: use insecure default but emit a warning (see below — logged after logger init)
+    JWT_SECRET_KEY: str = "dev-secret-DO-NOT-USE-IN-PRODUCTION"
+    _JWT_SECRET_IS_DEFAULT = True
+else:
+    JWT_SECRET_KEY = _raw_jwt_secret
+    _JWT_SECRET_IS_DEFAULT = False
+
+JWT_ALGORITHM: str = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES: int = int(_os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+REFRESH_TOKEN_EXPIRE_DAYS: int = int(_os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+BCRYPT_ROUNDS: int = int(_os.getenv("BCRYPT_ROUNDS", "12"))
+
+# COOKIE_SECURE=True forces HTTPS-only cookies; always False in development.
+COOKIE_SECURE: bool = ENVIRONMENT != "development"
+
 # --- Parámetros temporales (calculados dinámicamente) ---
 import logging
 from datetime import date, timedelta
@@ -92,6 +119,12 @@ from pathlib import Path
 import holidays as _holidays_lib
 
 logger = logging.getLogger(__name__)
+
+# Emit startup warning when using dev-default JWT secret (after logger is configured)
+if _JWT_SECRET_IS_DEFAULT:
+    logger.warning(
+        "JWT_SECRET_KEY not set — using dev default. NEVER use in production."
+    )
 
 _FERIADOS_IGNORAR_PATH = Path(__file__).parent / "feriados_ignorar.json"
 
