@@ -3,7 +3,7 @@
  * Se abre desde la derecha. Sin cascada reactiva (Fase 3 simplification).
  * Todos los valores vienen de /api/ventas-filtros/opciones en una sola llamada.
  */
-import type { VentasFiltrosOpciones, VentasFiltrosState, VentasFV, VentasTipoSucursal } from '../../types/ventas';
+import type { VentasFiltrosOpciones, VentasFiltrosState, VentasFV, VentasTipoSucursal, VentasZonasAgrupacion } from '../../types/ventas';
 import { DARK } from '../../lib/ventas-constants';
 
 interface VentasMapaFiltrosProps {
@@ -384,6 +384,18 @@ export default function VentasMapaFiltros({
             options={opciones?.marcas ?? []}
             selected={filtros.marcas}
             onChange={(v) => set('marcas', v)}
+          />
+
+          <SectionTitle>Zonas</SectionTitle>
+          <RadioGroup<VentasZonasAgrupacion>
+            label="Mostrar zonas"
+            options={[
+              { value: 'OCULTAS', label: 'Ocultas' },
+              { value: 'ruta', label: 'Por Ruta' },
+              { value: 'preventista', label: 'Por Preventista' },
+            ]}
+            value={filtros.zonas_agrupacion}
+            onChange={(v) => set('zonas_agrupacion', v)}
           />
 
         </div>

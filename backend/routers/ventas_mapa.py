@@ -1,4 +1,4 @@
-"""Endpoints del mapa de ventas: clientes con métricas y hover."""
+"""Endpoints del mapa de ventas: clientes con métricas, hover y zonas."""
 from __future__ import annotations
 
 import logging
@@ -10,8 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from auth.dependencies import get_current_active_user
 from auth.models import UserInDB
 from data.db import get_connection, release_connection
-from schemas_ventas_mapa import VentasCliente, VentasHoverCliente
+from schemas_ventas_mapa import VentasCliente, VentasHoverCliente, VentasZona
 from services.ventas_mapa_service import get_clientes_mapa, get_hover_cliente
+from services.ventas_zonas_service import get_zonas, AGRUPACIONES_VALIDAS
 from ventas_constants import METRICAS_VALIDAS, FV_PREVENTA
 
 router = APIRouter(prefix="/api/ventas-mapa", tags=["ventas-mapa"])
@@ -116,3 +117,69 @@ def get_hover(
         raise HTTPException(status_code=503, detail="Error al consultar datos del cliente")
 
     return VentasHoverCliente(**data)
+
+
+@router.get("/zonas", response_model=list[VentasZona])
+def get_mapa_zonas(
+    fecha_ini: date = Query(..., description="Fecha inicio (YYYY-MM-DD)"),
+    fecha_fin: date = Query(..., description="Fecha fin (YYYY-MM-DD)"),
+    agrupacion: str = Query("ruta", description="Agrupación: 'ruta' o 'preventista'"),
+    fv: str = Query(FV_PREVENTA, description="Fuerza de ventas: '1', '4' o 'AMBAS'"),
+    canal: Optional[str] = Query(None),
+    subcanal: Optional[str] = Query(None),
+    localidad: Optional[str] = Query(None),
+    lista_precio: Optional[int] = Query(None),
+    sucursal_id: Optional[int] = Query(None),
+    ruta: Optional[str] = Query(None),
+    preventista: Optional[str] = Query(None),
+    genericos: Optional[list[str]] = Query(None),
+    marcas: Optional[list[str]] = Query(None),
+    current_user: UserInDB = Depends(get_current_active_user),
+):
+    """
+    Calcula zonas geográficas usando Convex Hull agrupando por ruta o preventista.
+
+    Aplica outlier filter (> 2 std dev del centroide) y descarta grupos con < 3 puntos.
+    Devuelve vértices del hull en orden + métricas agregadas por zona.
+    """
+    if fecha_ini > fecha_fin:
+        raise HTTPException(status_code=400, detail="fecha_ini no puede ser posterior a fecha_fin")
+
+    if agrupacion not in AGRUPACIONES_VALIDAS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"agrupacion inválida. Opciones: {', '.join(sorted(AGRUPACIONES_VALIDAS))}",
+        )
+
+    try:
+        conn = get_connection()
+        try:
+            zonas = get_zonas(
+                conn=conn,
+                role_name=current_user.role_name,
+                sucursales_usuario=current_user.sucursales,
+                fecha_ini=fecha_ini,
+                fecha_fin=fecha_fin,
+                agrupacion=agrupacion,
+                fv=fv,
+                canal=canal,
+                subcanal=subcanal,
+                localidad=localidad,
+                lista_precio=lista_precio,
+                sucursal_id=sucursal_id,
+                ruta=ruta,
+                preventista=preventista,
+                genericos=genericos,
+                marcas=marcas,
+            )
+        finally:
+            release_connection(conn)
+    except HTTPException:
+        raise
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Error cargando zonas mapa: %s", exc)
+        raise HTTPException(status_code=503, detail="Error al consultar zonas")
+
+    return [VentasZona(**z) for z in zonas]

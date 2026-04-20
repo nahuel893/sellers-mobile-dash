@@ -1,12 +1,13 @@
 /**
  * Factory de layers deck.gl para el mapa de ventas.
  */
-import { ScatterplotLayer } from '@deck.gl/layers';
-import type { VentasCliente } from '../../types/ventas';
+import { ScatterplotLayer, PolygonLayer } from '@deck.gl/layers';
+import type { VentasCliente, VentasZona } from '../../types/ventas';
 import type { VentasMetrica } from '../../types/ventas';
 import {
   COLOR_SCALE_BURBUJAS,
   COLOR_SIN_VENTAS,
+  ZONE_COLORS,
   interpolateColor,
   normalize,
   toRadius,
@@ -14,6 +15,12 @@ import {
 
 export interface HoverInfo {
   object: VentasCliente | null;
+  x: number;
+  y: number;
+}
+
+export interface ZonaHoverInfo {
+  object: VentasZona | null;
   x: number;
   y: number;
 }
@@ -116,6 +123,73 @@ export function buildClientesLayer({
       getRadius: [metrica, min, max],
       getLineColor: [metrica],
       getLineWidth: [metrica],
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Zona layer (PolygonLayer)
+// ---------------------------------------------------------------------------
+
+/**
+ * Oscurece un color RGB en un 30% para usarlo como color de borde.
+ */
+function darken(color: [number, number, number]): [number, number, number] {
+  return [
+    Math.round(color[0] * 0.7),
+    Math.round(color[1] * 0.7),
+    Math.round(color[2] * 0.7),
+  ];
+}
+
+interface BuildZonasLayerOptions {
+  data: VentasZona[];
+  onHover: (info: ZonaHoverInfo) => void;
+}
+
+/**
+ * Construye el PolygonLayer para las zonas convex hull.
+ *
+ * Alpha 0.3 (76/255) para permitir superposición semitransparente.
+ * El borde es el mismo color pero más saturado (sin alpha).
+ */
+export function buildZonasLayer({
+  data,
+  onHover,
+}: BuildZonasLayerOptions): PolygonLayer<VentasZona> {
+  return new PolygonLayer<VentasZona>({
+    id: 'ventas-zonas-layer',
+    data,
+    pickable: true,
+    stroked: true,
+    filled: true,
+    wireframe: false,
+    lineWidthMinPixels: 1,
+    getLineWidth: 2,
+
+    getPolygon: (z) => z.coords,
+
+    getFillColor: (z) => {
+      const [r, g, b] = ZONE_COLORS[z.color_idx % ZONE_COLORS.length];
+      return [r, g, b, 76]; // alpha ~0.3
+    },
+
+    getLineColor: (z) => {
+      const base = ZONE_COLORS[z.color_idx % ZONE_COLORS.length];
+      return [...darken(base), 200];
+    },
+
+    onHover: (info) => {
+      onHover({
+        object: (info.object as VentasZona) ?? null,
+        x: info.x,
+        y: info.y,
+      });
+    },
+
+    updateTriggers: {
+      getFillColor: [data.length],
+      getLineColor: [data.length],
     },
   });
 }

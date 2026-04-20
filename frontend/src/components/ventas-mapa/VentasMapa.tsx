@@ -1,14 +1,16 @@
 /**
- * Componente de mapa: react-map-gl + deck.gl ScatterplotLayer.
+ * Componente de mapa: react-map-gl + deck.gl ScatterplotLayer + PolygonLayer (zonas).
  * Recibe los datos ya cargados y construye los layers.
  */
 import { useMemo, useState, useCallback } from 'react';
 import { Map } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DeckGLOverlay } from '../../utils/DeckGLOverlay';
-import { buildClientesLayer, type HoverInfo } from './VentasMapaLayers';
+import { buildClientesLayer, buildZonasLayer, type HoverInfo, type ZonaHoverInfo } from './VentasMapaLayers';
 import VentasMapaHoverCard from './VentasMapaHoverCard';
-import type { VentasCliente, VentasMetrica } from '../../types/ventas';
+import VentasMapaZonaHoverCard from './VentasMapaZonaHoverCard';
+import VentasMapaZonasBadges from './VentasMapaZonasBadges';
+import type { VentasCliente, VentasMetrica, VentasZona } from '../../types/ventas';
 import { MAP_INITIAL_VIEW, DARK } from '../../lib/ventas-constants';
 import { useVentasHover } from '../../hooks/ventas-mapa/use-ventas-hover';
 
@@ -22,26 +24,48 @@ interface VentasMapaProps {
   metrica: VentasMetrica;
   fechaIni: string;
   fechaFin: string;
+  zonas?: VentasZona[];
+  zonasAgrupacion?: 'ruta' | 'preventista';
 }
 
-export default function VentasMapa({ data, metrica, fechaIni, fechaFin }: VentasMapaProps) {
+export default function VentasMapa({
+  data,
+  metrica,
+  fechaIni,
+  fechaFin,
+  zonas,
+  zonasAgrupacion = 'ruta',
+}: VentasMapaProps) {
   const [hoverInfo, setHoverInfo] = useState<HoverInfo>({ object: null, x: 0, y: 0 });
+  const [zonaHoverInfo, setZonaHoverInfo] = useState<ZonaHoverInfo>({ object: null, x: 0, y: 0 });
 
   const handleHover = useCallback((info: HoverInfo) => {
     setHoverInfo(info);
+    // Cuando se hover un cliente, limpiar el hover de zona
+    if (info.object) setZonaHoverInfo({ object: null, x: 0, y: 0 });
+  }, []);
+
+  const handleZonaHover = useCallback((info: ZonaHoverInfo) => {
+    setZonaHoverInfo(info);
+    // Cuando se hover una zona, limpiar el hover de cliente
+    if (info.object) setHoverInfo({ object: null, x: 0, y: 0 });
   }, []);
 
   const handleClick = useCallback(({ object }: { object: VentasCliente }) => {
     window.open(`/ventas/cliente/${object.id_cliente}`, '_blank');
   }, []);
 
-  const layers = useMemo(
-    () =>
-      data.length > 0
-        ? [buildClientesLayer({ data, metrica, onHover: handleHover, onClick: handleClick })]
-        : [],
-    [data, metrica, handleHover, handleClick],
-  );
+  const layers = useMemo(() => {
+    const result = [];
+    // Zonas van primero (debajo de los puntos)
+    if (zonas && zonas.length > 0) {
+      result.push(buildZonasLayer({ data: zonas, onHover: handleZonaHover }));
+    }
+    if (data.length > 0) {
+      result.push(buildClientesLayer({ data, metrica, onHover: handleHover, onClick: handleClick }));
+    }
+    return result;
+  }, [data, metrica, zonas, handleHover, handleZonaHover, handleClick]);
 
   // Hover data query — solo cuando hay un cliente hovereado
   const { data: hoverData } = useVentasHover({
@@ -97,13 +121,27 @@ export default function VentasMapa({ data, metrica, fechaIni, fechaFin }: Ventas
         <DeckGLOverlay layers={layers} />
       </Map>
 
-      {/* Hover card — montado fuera del mapa para evitar overflow:hidden */}
+      {/* Badges de zonas — superpuesto en la parte superior del mapa */}
+      {zonas && zonas.length > 0 && (
+        <VentasMapaZonasBadges zonas={zonas} agrupacion={zonasAgrupacion} />
+      )}
+
+      {/* Hover card de cliente — montado fuera del mapa para evitar overflow:hidden */}
       {hoverInfo.object && (
         <VentasMapaHoverCard
           cliente={hoverInfo.object}
           hoverData={hoverData ?? null}
           x={hoverInfo.x}
           y={hoverInfo.y}
+        />
+      )}
+
+      {/* Hover card de zona */}
+      {zonaHoverInfo.object && (
+        <VentasMapaZonaHoverCard
+          zona={zonaHoverInfo.object}
+          x={zonaHoverInfo.x}
+          y={zonaHoverInfo.y}
         />
       )}
 

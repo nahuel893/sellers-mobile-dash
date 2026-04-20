@@ -89,6 +89,39 @@ export interface VentasFiltrosState {
   rutas: string[];
   preventistas: string[];
   metrica: VentasMetrica;
+  zonas_agrupacion: VentasZonasAgrupacion;
+}
+
+// ---------------------------------------------------------------------------
+// Zonas (Fase 4 — Convex Hull)
+// ---------------------------------------------------------------------------
+
+export interface GenericoZona {
+  generico: string;
+  m_act: number;
+  m_ant: number;
+}
+
+export interface VentasZonaMetricas {
+  bultos_m_act: number;
+  bultos_m_ant: number;
+  compradores_m_act: number;
+  compradores_m_ant: number;
+  por_generico: GenericoZona[];
+}
+
+export interface VentasZona {
+  nombre: string;
+  color_idx: number;
+  coords: [number, number][];   // [[lon, lat], ...] — orden deck.gl
+  n_clientes: number;
+  metricas: VentasZonaMetricas;
+}
+
+export type VentasZonasAgrupacion = 'OCULTAS' | 'ruta' | 'preventista';
+
+export interface VentasZonasParams extends VentasClientesParams {
+  agrupacion: 'ruta' | 'preventista';
 }
 
 // ---------------------------------------------------------------------------

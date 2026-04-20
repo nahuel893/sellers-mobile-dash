@@ -7,6 +7,8 @@ import type {
   VentasCliente,
   VentasHoverCliente,
   VentasClientesParams,
+  VentasZona,
+  VentasZonasParams,
 } from '../types/ventas';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -88,4 +90,23 @@ export const ventasApi = {
       `/api/ventas-mapa/cliente/${p.id_cliente}/hover`,
       { fecha_ini: p.fecha_ini, fecha_fin: p.fecha_fin },
     ),
+
+  getZonas: (params: VentasZonasParams) => {
+    const q: Record<string, ParamValue> = {
+      fecha_ini: params.fecha_ini,
+      fecha_fin: params.fecha_fin,
+      agrupacion: params.agrupacion,
+    };
+    if (params.fv) q.fv = params.fv;
+    if (params.canal) q.canal = params.canal;
+    if (params.subcanal) q.subcanal = params.subcanal;
+    if (params.localidad) q.localidad = params.localidad;
+    if (params.lista_precio != null) q.lista_precio = params.lista_precio;
+    if (params.sucursal_id != null) q.sucursal_id = params.sucursal_id;
+    if (params.ruta) q.ruta = params.ruta;
+    if (params.preventista) q.preventista = params.preventista;
+    if (params.genericos?.length) q.genericos = params.genericos;
+    if (params.marcas?.length) q.marcas = params.marcas;
+    return ventasFetch<VentasZona[]>('/api/ventas-mapa/zonas', q);
+  },
 };

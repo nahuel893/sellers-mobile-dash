@@ -47,6 +47,9 @@ export const COLOR_SCALE_CALOR: ColorStop[] = [
   { stop: 1.00, color: [200, 0, 0] },
 ];
 
+/** Threshold para colapsar badges de zonas (> N → una sola pill resumen) */
+export const ZONE_BADGE_THRESHOLD = 5;
+
 export const ZONE_COLORS: [number, number, number][] = [
   [255, 99, 132],
   [54, 162, 235],

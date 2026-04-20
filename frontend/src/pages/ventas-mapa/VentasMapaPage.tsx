@@ -15,10 +15,12 @@ import { useState, useCallback, useReducer } from 'react';
 import VentasMapa from '../../components/ventas-mapa/VentasMapa';
 import VentasMapaFiltros from '../../components/ventas-mapa/VentasMapaFiltros';
 import VentasMapaMetricaToggle from '../../components/ventas-mapa/VentasMapaMetricaToggle';
+import VentasMapaZonasCards from '../../components/ventas-mapa/VentasMapaZonasCards';
 import { useVentasFiltros } from '../../hooks/ventas-mapa/use-ventas-filtros';
 import { useVentasClientes } from '../../hooks/ventas-mapa/use-ventas-clientes';
-import type { VentasFiltrosState, VentasClientesParams, VentasMetrica } from '../../types/ventas';
-import { DARK } from '../../lib/ventas-constants';
+import { useVentasZonas } from '../../hooks/ventas-mapa/use-ventas-zonas';
+import type { VentasFiltrosState, VentasClientesParams, VentasMetrica, VentasZonasParams } from '../../types/ventas';
+import { DARK, ZONE_BADGE_THRESHOLD } from '../../lib/ventas-constants';
 import { Link } from 'react-router';
 
 // ---------------------------------------------------------------------------
@@ -52,6 +54,7 @@ const FILTROS_INICIALES: VentasFiltrosState = {
   rutas: [],
   preventistas: [],
   metrica: 'bultos',
+  zonas_agrupacion: 'OCULTAS',
 };
 
 // ---------------------------------------------------------------------------
@@ -93,6 +96,14 @@ function filtrosToParams(filtros: VentasFiltrosState): VentasClientesParams {
   };
 }
 
+function filtrosToZonasParams(filtros: VentasFiltrosState): VentasZonasParams | null {
+  if (filtros.zonas_agrupacion === 'OCULTAS') return null;
+  return {
+    ...filtrosToParams(filtros),
+    agrupacion: filtros.zonas_agrupacion,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Página
 // ---------------------------------------------------------------------------
@@ -119,6 +130,10 @@ export default function VentasMapaPage() {
   // Datos del mapa — se cargan con los filtros aplicados
   const params = filtrosToParams(filtrosAplicados);
   const { data: clientes, isLoading: clientesLoading, error: clientesError } = useVentasClientes(params);
+
+  // Zonas — solo se cargan si la agrupación no es OCULTAS
+  const zonasParams = filtrosToZonasParams(filtrosAplicados);
+  const { data: zonas, isLoading: zonasLoading } = useVentasZonas(zonasParams);
 
   const handleAplicar = useCallback(() => {
     setFiltrosAplicados(filtrosDraft);
@@ -196,9 +211,9 @@ export default function VentasMapaPage() {
         <div style={{ flex: 1 }} />
 
         {/* Estado de carga */}
-        {clientesLoading && (
+        {(clientesLoading || zonasLoading) && (
           <span style={{ fontSize: '12px', color: DARK.textMuted }}>
-            Cargando clientes…
+            {clientesLoading ? 'Cargando clientes…' : 'Cargando zonas…'}
           </span>
         )}
 
@@ -265,8 +280,19 @@ export default function VentasMapaPage() {
           metrica={filtrosAplicados.metrica}
           fechaIni={filtrosAplicados.fecha_ini}
           fechaFin={filtrosAplicados.fecha_fin}
+          zonas={zonas ?? undefined}
+          zonasAgrupacion={
+            filtrosAplicados.zonas_agrupacion !== 'OCULTAS'
+              ? filtrosAplicados.zonas_agrupacion
+              : undefined
+          }
         />
       </div>
+
+      {/* Cards de zonas — solo cuando hay más de ZONE_BADGE_THRESHOLD zonas */}
+      {zonas && zonas.length > ZONE_BADGE_THRESHOLD && (
+        <VentasMapaZonasCards zonas={zonas} />
+      )}
 
       {/* Drawer de filtros */}
       <VentasMapaFiltros
@@ -298,5 +324,6 @@ function countFiltrosActivos(f: VentasFiltrosState): number {
   if (f.fv !== 'AMBAS') count++;
   if (f.rutas.length) count++;
   if (f.preventistas.length) count++;
+  if (f.zonas_agrupacion !== 'OCULTAS') count++;
   return count;
 }

@@ -73,3 +73,25 @@ class VentasHoverCliente(BaseModel):
     id_cliente: int
     razon_social: str
     genericos: list[GenericoHover]
+
+
+# ---------------------------------------------------------------------------
+# Zonas (Fase 4 — Convex Hull)
+# ---------------------------------------------------------------------------
+
+class VentasZonaMetricas(BaseModel):
+    """Métricas agregadas por zona."""
+    bultos_m_act: float
+    bultos_m_ant: float
+    compradores_m_act: int     # clientes únicos con compras en el período
+    compradores_m_ant: int
+    por_generico: list[GenericoHover]   # reutilizamos GenericoHover (m_act/m_ant son bultos)
+
+
+class VentasZona(BaseModel):
+    """Zona geográfica representada por un polígono convex hull."""
+    nombre: str                          # nombre de la ruta o preventista
+    color_idx: int                       # índice en ZONE_COLORS (rota por mod)
+    coords: list[list[float]]            # [[lon, lat], ...] — vértices del hull
+    n_clientes: int                      # total de clientes en la zona (antes del outlier filter)
+    metricas: VentasZonaMetricas
