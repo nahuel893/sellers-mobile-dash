@@ -12,10 +12,19 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Pre-warm DataFrame cache al iniciar."""
+    """Pre-warm DataFrame cache y pools de conexiones al iniciar."""
     logger.info("Pre-warming DataFrame cache...")
     get_dataframe()
     logger.info("Cache ready.")
+
+    # Pre-initialize auth DB pool to catch misconfigurations at startup
+    try:
+        from data.auth_db import _get_auth_pool
+        _get_auth_pool()
+        logger.info("Auth DB pool ready.")
+    except Exception as exc:
+        logger.warning("Auth DB pool could not be initialized: %s", exc)
+
     yield
 
 

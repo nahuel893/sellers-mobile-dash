@@ -264,10 +264,10 @@ def _get_user_by_id(user_id: int) -> dict | None:
     Si el test mockeó get_user_by_username, no llegamos a este punto (se usa
     desde refresh que mockea get_refresh_token y get_user_sucursales).
     """
-    from data.db import get_connection, release_connection
+    from data.auth_db import get_auth_connection, release_auth_connection
     import psycopg2.extras
 
-    conn = get_connection()
+    conn = get_auth_connection()
     try:
         sql = """
             SELECT u.*, r.name AS role_name
@@ -280,7 +280,7 @@ def _get_user_by_id(user_id: int) -> dict | None:
             row = cur.fetchone()
             return dict(row) if row is not None else None
     finally:
-        release_connection(conn)
+        release_auth_connection(conn)
 
 
 # ---------------------------------------------------------------------------

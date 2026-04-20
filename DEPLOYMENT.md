@@ -16,12 +16,26 @@ cp .env.production.example .env.production
 
 Edit `.env.production` and set real values for:
 - `JWT_SECRET_KEY` — generate with `python -c "import secrets; print(secrets.token_hex(32))"`
-- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` — PostgreSQL Gold DW credentials
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` — PostgreSQL Gold DW credentials (read-only ventas data)
+- `AUTH_DB_HOST`, `AUTH_DB_PORT`, `AUTH_DB_NAME`, `AUTH_DB_USER`, `AUTH_DB_PASSWORD` — seller_dashboard_db credentials (auth + operations)
 
-**2. Run the auth schema migration** (only needed once)
+**2. Create the seller_dashboard_db** (only needed once)
+
+The app uses two separate PostgreSQL databases:
+- `medallion_db` (Gold DW) — read-only ventas data. Already exists.
+- `seller_dashboard_db` — auth schema (users, roles, tokens). Must be created.
 
 ```bash
-psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f backend/migrations/001_auth_schema.sql
+# Connect to postgres as superuser and create the auth DB
+psql -h $AUTH_DB_HOST -U $AUTH_DB_USER -d postgres <<EOF
+CREATE DATABASE seller_dashboard_db;
+EOF
+```
+
+**3. Run the auth schema migration** (only needed once)
+
+```bash
+psql -h $AUTH_DB_HOST -U $AUTH_DB_USER -d seller_dashboard_db -f backend/migrations/001_auth_schema.sql
 ```
 
 **3. Seed the admin user** (only needed once)

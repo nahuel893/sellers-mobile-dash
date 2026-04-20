@@ -85,6 +85,14 @@ VENDEDORES_EXCLUIR = []
 # --- Auth / JWT configuration (loaded from environment variables) ---
 import os as _os
 
+# Auth DB connection (seller_dashboard_db — separate from gold medallion DB)
+# Falls back to DB_* vars so single-DB setups work without extra config.
+AUTH_DB_HOST: str = _os.getenv("AUTH_DB_HOST", _os.getenv("DB_HOST", "localhost"))
+AUTH_DB_PORT: int = int(_os.getenv("AUTH_DB_PORT", _os.getenv("DB_PORT", "5432")))
+AUTH_DB_NAME: str = _os.getenv("AUTH_DB_NAME", "seller_dashboard_db")
+AUTH_DB_USER: str = _os.getenv("AUTH_DB_USER", _os.getenv("DB_USER", ""))
+AUTH_DB_PASSWORD: str = _os.getenv("AUTH_DB_PASSWORD", _os.getenv("DB_PASSWORD", ""))
+
 ENVIRONMENT: str = _os.getenv("ENVIRONMENT", "development")
 
 _raw_jwt_secret = _os.getenv("JWT_SECRET_KEY")
