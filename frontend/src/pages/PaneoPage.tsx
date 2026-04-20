@@ -7,7 +7,7 @@ import { useSucursales } from '../hooks/use-sucursales';
 import { useSupervisores } from '../hooks/use-supervisores';
 import { useDashboard } from '../hooks/use-dashboard';
 import { useCobertura } from '../hooks/use-cobertura';
-import { CATEGORIES, CATEGORY_NAMES, type CategoryKey } from '../lib/constants';
+import { CATEGORIES, type CategoryKey } from '../lib/constants';
 import { fromSlug } from '../lib/format';
 import type { VendedorListItem } from '../types/api';
 
@@ -108,11 +108,7 @@ export default function PaneoPage() {
       )}
 
       {step === 'vendedor' && currentVend && dashboard && (
-        <VendedorView
-          vendedor={currentVend}
-          dashboard={dashboard}
-          cobertura={cobertura}
-        />
+        <VendedorView vendedor={currentVend} cobertura={cobertura} />
       )}
     </div>
   );
@@ -156,11 +152,9 @@ function SupervisorView({
 
 function VendedorView({
   vendedor,
-  dashboard,
   cobertura,
 }: {
   vendedor: VendedorListItem;
-  dashboard: any;
   cobertura: any;
 }) {
   const pct = vendedor.categories?.CERVEZAS?.resumen.pct_tendencia ?? 0;

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import type { CategoryData } from '../types/api';
-import { CATEGORIES, type CategoryKey } from '../lib/constants';
+import { type CategoryKey } from '../lib/constants';
 import CategorySlide from './CategorySlide';
 
 interface CategoryCarouselProps {

@@ -18,7 +18,6 @@ export default function GaugeTotal({
   falta,
   tendencia,
   diasRestantes,
-  title,
 }: GaugeTotalProps) {
   const color = colorByPerformance(pctTendencia);
   const vtaDiaria = diasRestantes && diasRestantes > 0 && falta > 0
