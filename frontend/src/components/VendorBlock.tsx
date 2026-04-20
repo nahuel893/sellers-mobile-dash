@@ -19,7 +19,7 @@ export default function VendorBlock({ vendedor, globalSlideIndex }: VendorBlockP
     >
       <div className="flex items-baseline gap-2 px-3 pt-3">
         <Link
-          to={`/vendedor/${vendedor.slug}`}
+          to={`/sellers/vendedor/${vendedor.slug}`}
           className="text-sm font-bold text-brand-dark hover:underline no-underline"
         >
           {vendedor.nombre}

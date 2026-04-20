@@ -18,7 +18,7 @@ export default function VendedorPage() {
 
   return (
     <>
-      <BackLink to="/" />
+      <BackLink to="/sellers" />
 
       <div className="flex items-baseline gap-2 px-3 pb-2">
         <h1 className="text-lg font-extrabold text-brand-dark">{data?.nombre ?? nombre}</h1>

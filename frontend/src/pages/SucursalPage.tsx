@@ -26,7 +26,7 @@ export default function SucursalPage() {
 
   return (
     <>
-      <BackLink to="/" />
+      <BackLink to="/sellers" />
 
       {isLoading && (
         <p className="text-center text-sm text-gray-400 py-8">Cargando datos...</p>
@@ -60,7 +60,7 @@ export default function SucursalPage() {
               >
                 <div className="flex items-baseline gap-2 px-3 pt-3">
                   <Link
-                    to={`/supervisor/${slug}?sucursal=${id}`}
+                    to={`/sellers/supervisor/${slug}?sucursal=${id}`}
                     className="text-sm font-bold text-brand-dark hover:underline no-underline"
                   >
                     {nombre}

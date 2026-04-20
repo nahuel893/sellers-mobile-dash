@@ -14,7 +14,7 @@ export default function MapaPage() {
 
   return (
     <>
-      <BackLink to="/" />
+      <BackLink to="/sellers" />
 
       <div className="px-3 pb-3">
         <h1 className="text-lg font-extrabold text-brand-dark">

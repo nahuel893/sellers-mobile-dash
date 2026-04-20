@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
+import PlatformHome from './pages/PlatformHome';
 import HomePage from './pages/HomePage';
 import VendedorPage from './pages/VendedorPage';
 import SupervisorPage from './pages/SupervisorPage';
@@ -20,13 +21,18 @@ export default function App() {
 
           {/* Protected routes — all require authentication */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/vendedor/:slug" element={<VendedorPage />} />
-            <Route path="/supervisor/:slug" element={<SupervisorPage />} />
-            <Route path="/sucursal/:id" element={<SucursalPage />} />
-            <Route path="/mapa/:slug" element={<MapaPage />} />
-            <Route path="/paneo" element={<PaneoPage />} />
-            <Route path="/supervisor/:slug/paneo" element={<PaneoPage />} />
+            {/* Platform home: cards to each dashboard */}
+            <Route path="/" element={<PlatformHome />} />
+
+            {/* Sellers dashboard and sub-pages */}
+            <Route path="/sellers" element={<HomePage />} />
+            <Route path="/sellers/vendedor/:slug" element={<VendedorPage />} />
+            <Route path="/sellers/supervisor/:slug" element={<SupervisorPage />} />
+            <Route path="/sellers/sucursal/:id" element={<SucursalPage />} />
+            <Route path="/sellers/mapa/:slug" element={<MapaPage />} />
+            <Route path="/sellers/paneo" element={<PaneoPage />} />
+            <Route path="/sellers/supervisor/:slug/paneo" element={<PaneoPage />} />
+
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

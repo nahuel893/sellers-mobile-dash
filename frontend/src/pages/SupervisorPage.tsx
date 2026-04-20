@@ -18,7 +18,7 @@ export default function SupervisorPage() {
 
   const nombre = slug ? fromSlug(slug) : '';
   const pct = data?.categories.CERVEZAS?.resumen.pct_tendencia ?? 0;
-  const backTo = sucursal ? `/sucursal/${sucursal}` : '/';
+  const backTo = sucursal ? `/sellers/sucursal/${sucursal}` : '/sellers';
 
   return (
     <>
