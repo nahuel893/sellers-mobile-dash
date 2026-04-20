@@ -162,6 +162,20 @@ export interface VentasCompro {
   ultima_compra: string | null;  // ISO date string o null
 }
 
+// ---------------------------------------------------------------------------
+// Búsqueda de cliente (Fase 6)
+// ---------------------------------------------------------------------------
+
+export interface VentasClienteBusqueda {
+  id_cliente: number;
+  razon_social: string;
+  fantasia: string | null;
+  localidad: string | null;
+  sucursal: string | null;
+  latitud: number | null;
+  longitud: number | null;
+}
+
 /** Parámetros para /api/ventas-mapa/compro (mismo pipeline de filtros que clientes, sin metrica) */
 export interface VentasComproParams {
   fecha_ini: string;

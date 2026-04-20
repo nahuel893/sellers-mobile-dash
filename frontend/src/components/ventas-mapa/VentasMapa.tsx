@@ -4,10 +4,14 @@
  *   - burbujas: ScatterplotLayer (existente)
  *   - calor: HeatmapLayer (difuso) o HexagonLayer (grilla)
  *   - compro: ScatterplotLayer verde/rojo
+ *
+ * Expone ref al Map mediante forwardRef para que VentasMapaPage pueda hacer flyTo.
  */
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, forwardRef } from 'react';
 import { Map } from 'react-map-gl/maplibre';
+import type { MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { ScatterplotLayer } from '@deck.gl/layers';
 import { DeckGLOverlay } from '../../utils/DeckGLOverlay';
 import {
   buildClientesLayer,
@@ -22,7 +26,14 @@ import {
 import VentasMapaHoverCard from './VentasMapaHoverCard';
 import VentasMapaZonaHoverCard from './VentasMapaZonaHoverCard';
 import VentasMapaZonasBadges from './VentasMapaZonasBadges';
-import type { VentasCliente, VentasMetrica, VentasZona, VentasCompro, CalorSubmodo } from '../../types/ventas';
+import type {
+  VentasCliente,
+  VentasMetrica,
+  VentasZona,
+  VentasCompro,
+  CalorSubmodo,
+  VentasClienteBusqueda,
+} from '../../types/ventas';
 import { MAP_INITIAL_VIEW, DARK } from '../../lib/ventas-constants';
 import { useVentasHover } from '../../hooks/ventas-mapa/use-ventas-hover';
 
@@ -45,9 +56,46 @@ interface VentasMapaProps {
   calorSubmodo?: CalorSubmodo;
   /** Datos para modo compro (endpoint /compro) */
   dataCompro?: VentasCompro[];
+  /** Cliente destacado por el buscador (Fase 6) */
+  highlightedClient?: VentasClienteBusqueda | null;
 }
 
-export default function VentasMapa({
+/** Construye las dos capas de highlight (halo blanco + pin magenta). */
+function buildHighlightLayers(cliente: VentasClienteBusqueda) {
+  if (
+    cliente.latitud == null || cliente.longitud == null ||
+    cliente.latitud === 0 || cliente.longitud === 0
+  ) {
+    return [];
+  }
+  const point = [{ position: [cliente.longitud, cliente.latitud] as [number, number] }];
+
+  const halo = new ScatterplotLayer({
+    id: 'highlight-halo',
+    data: point,
+    getPosition: (d) => d.position,
+    getRadius: 30,
+    radiusUnits: 'pixels',
+    getFillColor: [255, 255, 255, 100],
+    pickable: false,
+    stroked: false,
+  });
+
+  const pin = new ScatterplotLayer({
+    id: 'highlight-pin',
+    data: point,
+    getPosition: (d) => d.position,
+    getRadius: 18,
+    radiusUnits: 'pixels',
+    getFillColor: [255, 0, 200, 230],
+    pickable: false,
+    stroked: false,
+  });
+
+  return [halo, pin];
+}
+
+const VentasMapa = forwardRef<MapRef, VentasMapaProps>(function VentasMapa({
   data,
   metrica,
   fechaIni,
@@ -57,7 +105,8 @@ export default function VentasMapa({
   modo = 'burbujas',
   calorSubmodo = 'difuso',
   dataCompro = [],
-}: VentasMapaProps) {
+  highlightedClient = null,
+}, mapRef) {
   const [hoverInfo, setHoverInfo] = useState<HoverInfo>({ object: null, x: 0, y: 0 });
   const [zonaHoverInfo, setZonaHoverInfo] = useState<ZonaHoverInfo>({ object: null, x: 0, y: 0 });
   const [comproHoverInfo, setComproHoverInfo] = useState<ComproHoverInfo>({ object: null, x: 0, y: 0 });
@@ -110,8 +159,13 @@ export default function VentasMapa({
       result.push(buildComproLayer({ data: dataCompro, onHover: handleComproHover }));
     }
 
+    // Highlight del buscador — siempre va al tope (último en el array)
+    if (highlightedClient) {
+      result.push(...buildHighlightLayers(highlightedClient));
+    }
+
     return result;
-  }, [data, metrica, zonas, modo, calorSubmodo, dataCompro, handleHover, handleZonaHover, handleComproHover, handleClick]);
+  }, [data, metrica, zonas, modo, calorSubmodo, dataCompro, highlightedClient, handleHover, handleZonaHover, handleComproHover, handleClick]);
 
   // Hover data query — solo cuando hay un cliente burbujas hovereado
   const { data: hoverData } = useVentasHover({
@@ -160,6 +214,7 @@ export default function VentasMapa({
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <Map
+        ref={mapRef}
         mapStyle={MAP_STYLE}
         initialViewState={MAP_INITIAL_VIEW}
         style={{ width: '100%', height: '100%' }}
@@ -240,7 +295,9 @@ export default function VentasMapa({
       )}
     </div>
   );
-}
+});
+
+export default VentasMapa;
 
 // ---------------------------------------------------------------------------
 // Sub-componentes internos

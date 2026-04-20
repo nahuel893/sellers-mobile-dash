@@ -44,6 +44,7 @@ from routers.config_router import router as config_router
 from routers.cobertura import router as cobertura_router
 from routers.ventas_mapa import router as ventas_mapa_router
 from routers.ventas_filtros import router as ventas_filtros_router
+from routers.ventas_cliente import router as ventas_cliente_router
 from auth.router import router as auth_router
 from auth.admin_router import router as admin_router
 
@@ -53,6 +54,7 @@ app.include_router(config_router)
 app.include_router(cobertura_router)
 app.include_router(ventas_mapa_router)
 app.include_router(ventas_filtros_router)
+app.include_router(ventas_cliente_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
 

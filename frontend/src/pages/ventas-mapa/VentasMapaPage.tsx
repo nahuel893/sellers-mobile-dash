@@ -11,12 +11,14 @@
  *
  * Target: desktop ≥ 1280px. Tema oscuro.
  */
-import { useState, useCallback, useReducer } from 'react';
+import { useState, useCallback, useReducer, useRef } from 'react';
+import type { MapRef } from 'react-map-gl/maplibre';
 import VentasMapa from '../../components/ventas-mapa/VentasMapa';
 import VentasMapaFiltros from '../../components/ventas-mapa/VentasMapaFiltros';
 import VentasMapaMetricaToggle from '../../components/ventas-mapa/VentasMapaMetricaToggle';
 import VentasMapaModoToggle from '../../components/ventas-mapa/VentasMapaModoToggle';
 import VentasMapaZonasCards from '../../components/ventas-mapa/VentasMapaZonasCards';
+import VentasMapaBuscador from '../../components/ventas-mapa/VentasMapaBuscador';
 import { useVentasFiltros } from '../../hooks/ventas-mapa/use-ventas-filtros';
 import { useVentasClientes } from '../../hooks/ventas-mapa/use-ventas-clientes';
 import { useVentasZonas } from '../../hooks/ventas-mapa/use-ventas-zonas';
@@ -29,6 +31,7 @@ import type {
   VentasMapaModo,
   CalorSubmodo,
   VentasComproParams,
+  VentasClienteBusqueda,
 } from '../../types/ventas';
 import { DARK, ZONE_BADGE_THRESHOLD } from '../../lib/ventas-constants';
 import { Link } from 'react-router';
@@ -139,6 +142,10 @@ export default function VentasMapaPage() {
   // Modo de visualización del mapa
   const [modo, setModo] = useState<VentasMapaModo>('burbujas');
   const [calorSubmodo, setCalorSubmodo] = useState<CalorSubmodo>('difuso');
+
+  // Búsqueda de cliente (Fase 6)
+  const mapRef = useRef<MapRef>(null);
+  const [clienteHighlight, setClienteHighlight] = useState<VentasClienteBusqueda | null>(null);
 
   // Filtros del drawer (borrador)
   const [filtrosDraft, dispatchFiltros] = useReducer(filtrosReducer, FILTROS_INICIALES);
@@ -316,6 +323,7 @@ export default function VentasMapaPage() {
       {/* Mapa — ocupa todo el espacio restante */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <VentasMapa
+          ref={mapRef}
           data={clientes ?? []}
           metrica={filtrosAplicados.metrica}
           fechaIni={filtrosAplicados.fecha_ini}
@@ -329,6 +337,13 @@ export default function VentasMapaPage() {
           modo={modo}
           calorSubmodo={calorSubmodo}
           dataCompro={dataCompro ?? []}
+          highlightedClient={clienteHighlight}
+        />
+
+        {/* Buscador de clientes — overlay top-right */}
+        <VentasMapaBuscador
+          mapRef={mapRef}
+          onClienteSelect={setClienteHighlight}
         />
       </div>
 

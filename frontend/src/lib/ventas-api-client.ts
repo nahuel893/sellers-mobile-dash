@@ -11,6 +11,7 @@ import type {
   VentasZonasParams,
   VentasCompro,
   VentasComproParams,
+  VentasClienteBusqueda,
 } from '../types/ventas';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -111,6 +112,9 @@ export const ventasApi = {
     if (params.marcas?.length) q.marcas = params.marcas;
     return ventasFetch<VentasZona[]>('/api/ventas-mapa/zonas', q);
   },
+
+  buscarClientes: (q: string, limit = 50) =>
+    ventasFetch<VentasClienteBusqueda[]>('/api/ventas-cliente/buscar', { q, limit }),
 
   getCompro: (params: VentasComproParams) => {
     const q: Record<string, ParamValue> = {

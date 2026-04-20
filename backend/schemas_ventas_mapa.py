@@ -99,6 +99,21 @@ class VentasZona(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Búsqueda de cliente (Fase 6)
+# ---------------------------------------------------------------------------
+
+class VentasClienteBusqueda(BaseModel):
+    """Resultado de búsqueda de cliente por nombre o ID."""
+    id_cliente: int
+    razon_social: str
+    fantasia: Optional[str] = None
+    localidad: Optional[str] = None
+    sucursal: Optional[str] = None
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
+
+
+# ---------------------------------------------------------------------------
 # Compro / No-compro (Fase 5)
 # ---------------------------------------------------------------------------
 
