@@ -163,8 +163,10 @@ class TestTokenEntropy:
 class TestCreateRefreshToken:
     def test_refresh_token_has_type_refresh(self):
         """Decoded refresh token must contain type='refresh'."""
-        import config
         auth_jwt = _import_jwt()
+        # Use the config object auth.jwt actually holds (test_auth_config.py
+        # reloads config and can leave different instances in memory).
+        config = auth_jwt.config
         token = auth_jwt.create_refresh_token(user_id=5)
         # Decode manually to inspect raw claims (decode_token is for access tokens)
         payload = jose_jwt.decode(
@@ -176,8 +178,10 @@ class TestCreateRefreshToken:
 
     def test_refresh_token_sub_is_str_user_id(self):
         """refresh token sub must be str(user_id) per JWT standard."""
-        import config
         auth_jwt = _import_jwt()
+        # Use the config object auth.jwt actually holds (test_auth_config.py
+        # reloads config and can leave different instances in memory).
+        config = auth_jwt.config
         token = auth_jwt.create_refresh_token(user_id=42)
         payload = jose_jwt.decode(
             token,
@@ -188,8 +192,10 @@ class TestCreateRefreshToken:
 
     def test_refresh_token_has_exp_in_future(self):
         """Refresh token exp must be in the future."""
-        import config
         auth_jwt = _import_jwt()
+        # Use the config object auth.jwt actually holds (test_auth_config.py
+        # reloads config and can leave different instances in memory).
+        config = auth_jwt.config
         token = auth_jwt.create_refresh_token(user_id=1)
         payload = jose_jwt.decode(
             token,

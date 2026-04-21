@@ -32,7 +32,7 @@ from auth.repository import (
     set_user_password,
     update_user,
 )
-from data.db import get_connection, release_connection
+from data.gold_db import get_connection, release_connection
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 

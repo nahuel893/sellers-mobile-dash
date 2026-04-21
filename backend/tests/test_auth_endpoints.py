@@ -91,7 +91,11 @@ def test_login_success(client, monkeypatch):
 def test_login_access_token_contains_iat(client, monkeypatch):
     """RF-AUTH-006: el access token debe incluir la claim iat (issued-at)."""
     from jose import jwt as jose_jwt
-    import config as cfg
+    # Use the config object that auth.jwt actually holds, not a fresh import —
+    # test_auth_config.py reloads the config module and can leave different
+    # instances in memory, so we decode with the same secret auth.jwt used.
+    from auth import jwt as auth_jwt_mod
+    cfg = auth_jwt_mod.config
 
     user = _make_user()
     monkeypatch.setattr("auth.router.get_user_by_username", lambda u, conn=None: user if u == "admin" else None)

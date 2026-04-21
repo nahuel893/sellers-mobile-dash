@@ -8,9 +8,8 @@ Configuration via environment variables:
     ADMIN_PASSWORD   — REQUIRED; script exits if not set
     ADMIN_FULL_NAME  — display name (default: "Administrador")
 
-PostgreSQL connection uses AUTH_DB_* vars (seller_dashboard_db).
-Falls back to DB_* vars when AUTH_DB_* are not set (single-DB dev mode):
-    AUTH_DB_HOST, AUTH_DB_PORT, AUTH_DB_NAME, AUTH_DB_USER, AUTH_DB_PASSWORD
+PostgreSQL connection uses APP_DB_* vars (sellers_app_db — App DB):
+    APP_DB_HOST, APP_DB_PORT, APP_DB_NAME, APP_DB_USER, APP_DB_PASSWORD
 
 The script is importable for testing (see tests/test_seed_admin.py).
 The main entry-point is ``seed_admin()`` which can be called directly.
@@ -53,11 +52,11 @@ def seed_admin() -> None:
     password_hash = hash_password(password)
 
     conn = psycopg2.connect(
-        host=os.getenv("AUTH_DB_HOST", os.getenv("DB_HOST", "localhost")),
-        port=os.getenv("AUTH_DB_PORT", os.getenv("DB_PORT", "5432")),
-        dbname=os.getenv("AUTH_DB_NAME", "seller_dashboard_db"),
-        user=os.getenv("AUTH_DB_USER", os.getenv("DB_USER")),
-        password=os.getenv("AUTH_DB_PASSWORD", os.getenv("DB_PASSWORD")),
+        host=os.getenv("APP_DB_HOST", "localhost"),
+        port=os.getenv("APP_DB_PORT", "5432"),
+        dbname=os.getenv("APP_DB_NAME", "sellers_app_db"),
+        user=os.getenv("APP_DB_USER"),
+        password=os.getenv("APP_DB_PASSWORD"),
     )
 
     with conn.cursor() as cur:

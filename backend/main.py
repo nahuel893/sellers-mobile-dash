@@ -13,19 +13,41 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Pre-warm DataFrame cache y pools de conexiones al iniciar."""
+    # Inicializar pool Gold DB (medallion_db)
+    try:
+        from data import gold_db
+        gold_db.init_pool()
+        logger.info("Gold DB pool (medallion_db) listo.")
+    except Exception as exc:
+        logger.warning("Gold DB pool no se pudo inicializar: %s", exc)
+
+    # Inicializar pool App DB (sellers_app_db)
+    try:
+        from data import app_db
+        app_db.init_pool()
+        logger.info("App DB pool (sellers_app_db) listo.")
+    except Exception as exc:
+        logger.warning("App DB pool no se pudo inicializar: %s", exc)
+
+    # Pre-warm DataFrame cache (usa Gold DB)
     logger.info("Pre-warming DataFrame cache...")
     get_dataframe()
-    logger.info("Cache ready.")
-
-    # Pre-initialize auth DB pool to catch misconfigurations at startup
-    try:
-        from data.auth_db import _get_auth_pool
-        _get_auth_pool()
-        logger.info("Auth DB pool ready.")
-    except Exception as exc:
-        logger.warning("Auth DB pool could not be initialized: %s", exc)
+    logger.info("Cache listo.")
 
     yield
+
+    # Cerrar ambos pools al apagar
+    try:
+        from data import gold_db
+        gold_db.close_pool()
+    except Exception as exc:
+        logger.warning("Error cerrando Gold DB pool: %s", exc)
+
+    try:
+        from data import app_db
+        app_db.close_pool()
+    except Exception as exc:
+        logger.warning("Error cerrando App DB pool: %s", exc)
 
 
 app = FastAPI(

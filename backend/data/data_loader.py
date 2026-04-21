@@ -35,7 +35,7 @@ _cob_cache_date = None
 
 def _cargar_ventas_db():
     """Trae ventas del mes actual desde PostgreSQL."""
-    from data.db import get_connection, release_connection
+    from data.gold_db import get_connection, release_connection
     from data.queries import query_ventas_mes
 
     hoy = date.today()
@@ -221,7 +221,7 @@ def _load_dataframe():
 
 def _cargar_cobertura_db():
     """Trae cobertura del mes actual desde PostgreSQL."""
-    from data.db import get_connection, release_connection
+    from data.gold_db import get_connection, release_connection
     from data.queries import query_cobertura_mes
 
     hoy = date.today()

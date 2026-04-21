@@ -34,7 +34,7 @@ def get_mapa_vendedor(
         raise HTTPException(status_code=400, detail='No se pudo determinar la sucursal')
 
     try:
-        from data.db import get_connection, release_connection
+        from data.gold_db import get_connection, release_connection
         from data.queries import query_clientes_vendedor
         conn = get_connection()
         try:

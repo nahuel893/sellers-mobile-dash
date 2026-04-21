@@ -1,47 +1,23 @@
 """
-Conexión a PostgreSQL (capa Gold).
-Credenciales via variables de entorno o archivo .env
+DEPRECATED — thin re-export para compatibilidad.
+
+Usar data.gold_db para conexiones a la capa Gold DW (medallion_db).
+Usar data.app_db para conexiones a la App DB (sellers_app_db).
+
+Este módulo re-exporta las funciones de gold_db para no romper
+código legacy que importaba desde data.db.
 """
-import os
-import logging
-import pathlib
+import warnings as _warnings
 
-import psycopg2
-from psycopg2 import pool
-from dotenv import load_dotenv
+_warnings.warn(
+    "data.db está deprecado. Usar data.gold_db para Gold DW o data.app_db para App DB.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-# Buscar .env en la raíz del proyecto (3 niveles arriba de backend/data/db.py)
-_env_path = pathlib.Path(__file__).resolve().parent.parent.parent / '.env'
-load_dotenv(_env_path)
-
-logger = logging.getLogger(__name__)
-
-_pool = None
-
-
-def _get_pool():
-    """Inicializa el pool de conexiones (lazy singleton)."""
-    global _pool
-    if _pool is None:
-        _pool = pool.SimpleConnectionPool(
-            minconn=1,
-            maxconn=5,
-            host=os.getenv('DB_HOST', 'localhost'),
-            port=os.getenv('DB_PORT', '5432'),
-            dbname=os.getenv('DB_NAME', 'gold_db'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
-        )
-        logger.info('Pool de conexiones PostgreSQL creado')
-    return _pool
-
-
-def get_connection():
-    """Retorna conexión desde el pool."""
-    return _get_pool().getconn()
-
-
-def release_connection(conn):
-    """Devuelve una conexión al pool."""
-    if _pool is not None:
-        _pool.putconn(conn)
+from data.gold_db import (  # noqa: F401, E402
+    get_connection,
+    release_connection,
+    init_pool,
+    close_pool,
+)

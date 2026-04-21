@@ -264,7 +264,7 @@ def _get_user_by_id(user_id: int) -> dict | None:
     Si el test mockeó get_user_by_username, no llegamos a este punto (se usa
     desde refresh que mockea get_refresh_token y get_user_sucursales).
     """
-    from data.auth_db import get_auth_connection, release_auth_connection
+    from data.app_db import get_connection as get_auth_connection, release_connection as release_auth_connection
     import psycopg2.extras
 
     conn = get_auth_connection()

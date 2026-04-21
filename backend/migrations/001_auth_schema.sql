@@ -1,6 +1,9 @@
 -- =============================================================
 -- Migration 001: Auth schema
+-- Target DB: sellers_app_db (APP_DB_* — NOT medallion_db)
 -- Idempotent — safe to run multiple times.
+--
+-- psql -h $APP_DB_HOST -U $APP_DB_USER -d $APP_DB_NAME -f 001_auth_schema.sql
 -- =============================================================
 
 -- Auth schema isolation (RF-DB-001)

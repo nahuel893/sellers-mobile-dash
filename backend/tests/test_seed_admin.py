@@ -46,12 +46,18 @@ def _make_conn_mock(fetchone_return=None):
 def test_seed_requires_admin_password(monkeypatch):
     """Script must fail when ADMIN_PASSWORD is not set."""
     monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
+    # Prevent the module from re-populating ADMIN_PASSWORD from the real
+    # .env file during reload.
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **kw: None)
 
     with patch("scripts.seed_admin.psycopg2.connect") as mock_connect:
         mock_connect.return_value.__enter__ = MagicMock(return_value=MagicMock())
         mock_connect.return_value.__exit__ = MagicMock(return_value=False)
 
         seed = _reload_seed()
+        # Re-delete after reload, in case load_dotenv was already called with
+        # the patched version but ADMIN_PASSWORD leaked from another test fixture.
+        monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
         import pytest
         with pytest.raises((SystemExit, ValueError)):
             seed.seed_admin()

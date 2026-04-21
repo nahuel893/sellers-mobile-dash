@@ -16,33 +16,33 @@ cp .env.production.example .env.production
 
 Edit `.env.production` and set real values for:
 - `JWT_SECRET_KEY` — generate with `python -c "import secrets; print(secrets.token_hex(32))"`
-- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` — PostgreSQL Gold DW credentials (read-only ventas data)
-- `AUTH_DB_HOST`, `AUTH_DB_PORT`, `AUTH_DB_NAME`, `AUTH_DB_USER`, `AUTH_DB_PASSWORD` — seller_dashboard_db credentials (auth + operations)
+- `GOLD_DB_HOST`, `GOLD_DB_PORT`, `GOLD_DB_NAME`, `GOLD_DB_USER`, `GOLD_DB_PASSWORD` — medallion_db credentials (read-only Gold DW)
+- `APP_DB_HOST`, `APP_DB_PORT`, `APP_DB_NAME`, `APP_DB_USER`, `APP_DB_PASSWORD` — sellers_app_db credentials (auth + operations, read-write)
 
-**2. Create the seller_dashboard_db** (only needed once)
+**2. Create sellers_app_db** (only needed once)
 
 The app uses two separate PostgreSQL databases:
-- `medallion_db` (Gold DW) — read-only ventas data. Already exists.
-- `seller_dashboard_db` — auth schema (users, roles, tokens). Must be created.
+- `medallion_db` (Gold DW) — read-only ventas data. Owned by Gold team. Already exists.
+- `sellers_app_db` — auth + operations schemas (users, roles, tokens, visitas). Owned by app team. Must be created.
 
 ```bash
-# Connect to postgres as superuser and create the auth DB
-psql -h $AUTH_DB_HOST -U $AUTH_DB_USER -d postgres <<EOF
-CREATE DATABASE seller_dashboard_db;
-EOF
+# Connect to postgres as superuser and create the app DB
+psql -h $APP_DB_HOST -U postgres -d postgres -c "CREATE DATABASE sellers_app_db;"
 ```
 
-**3. Run the auth schema migration** (only needed once)
+**3. Run migrations on sellers_app_db** (only needed once)
 
 ```bash
-psql -h $AUTH_DB_HOST -U $AUTH_DB_USER -d seller_dashboard_db -f backend/migrations/001_auth_schema.sql
+# Migration 001: auth schema (users, roles, refresh_tokens)
+psql -h $APP_DB_HOST -U $APP_DB_USER -d $APP_DB_NAME -f backend/migrations/001_auth_schema.sql
 ```
 
-**3. Seed the admin user** (only needed once)
+**4. Seed the admin user** (only needed once)
 
 ```bash
-# With the backend container running, or via the venv locally:
-cd backend && python scripts/seed_admin.py
+# Via the venv locally (from backend/ directory):
+APP_DB_HOST=... APP_DB_USER=... APP_DB_PASSWORD=... APP_DB_NAME=sellers_app_db \
+  ADMIN_PASSWORD=changeme .venv/bin/python -m scripts.seed_admin
 ```
 
 ## Build and start

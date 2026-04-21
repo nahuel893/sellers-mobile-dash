@@ -12,7 +12,7 @@ from typing import Optional
 
 import psycopg2.extras
 
-from data.auth_db import get_auth_connection as get_connection, release_auth_connection as release_connection
+from data.app_db import get_connection, release_connection
 
 
 # ---------------------------------------------------------------------------
