@@ -172,3 +172,54 @@ export interface SucursalAdminItem {
   id: number;
   descripcion: string;
 }
+
+// --- Dashboard redesign types (Phase B schemas) ---
+
+/** Matches PreventistaItem */
+export interface Preventista {
+  nombre: string;
+  slug: string;
+  iniciales: string;
+  ruta: string | null;
+}
+
+/** Matches SparklineDia */
+export interface SparklineDia {
+  fecha: string;
+  por_grupo: Record<string, number>;
+}
+
+/** Matches SparklineResponse */
+export interface SparklineResponse {
+  vendedor: string;
+  dias: number;
+  puntos: SparklineDia[];
+}
+
+/** Matches BrandDelta */
+export interface BrandDelta {
+  grupo_marca: string;
+  pct_actual: number;
+  pct_anterior: number | null;
+  delta_pp: number | null;
+}
+
+/** Matches DeltaResponse */
+export interface DeltaResponse {
+  vendedor: string;
+  deltas: BrandDelta[];
+}
+
+/** Matches WeatherResponse */
+export interface WeatherResponse {
+  city: string;
+  temp_c: number;
+  feels_like_c: number;
+  min_c: number;
+  max_c: number;
+  humidity_pct: number;
+  wind_kmh: number;
+  condition: string;
+  icon: string;
+  observed_at: string;
+}

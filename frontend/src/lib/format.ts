@@ -35,3 +35,52 @@ export function toSlug(name: string): string {
 export function fromSlug(slug: string): string {
   return decodeURIComponent(slug.replace(/-/g, ' '));
 }
+
+/**
+ * Formatea un delta de puntos porcentuales.
+ * null → '—', positive → '+X.Xpp', negative → '-X.Xpp' (always 1 decimal)
+ */
+export function fmtPctPp(delta: number | null): string {
+  if (delta === null) return '—';
+  const sign = delta >= 0 ? '+' : '';
+  return `${sign}${delta.toFixed(1)}pp`;
+}
+
+/**
+ * Formatea un ISO datetime en español corto.
+ * Ejemplo: 'Lun 20 Abr · 14:32'
+ * Capitaliza la primera letra del día de la semana, elimina puntos finales,
+ * separa fecha y hora con ' · '.
+ */
+export function fmtDateShort(iso: string): string {
+  const date = new Date(iso);
+  const fmt = new Intl.DateTimeFormat('es-AR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const parts = fmt.formatToParts(date);
+
+  let weekday = '';
+  let day = '';
+  let month = '';
+  let hour = '';
+  let minute = '';
+
+  for (const part of parts) {
+    switch (part.type) {
+      case 'weekday': weekday = part.value.replace(/\.$/, ''); break;
+      case 'day':     day = part.value; break;
+      case 'month':   month = part.value.replace(/\.$/, ''); break;
+      case 'hour':    hour = part.value; break;
+      case 'minute':  minute = part.value; break;
+    }
+  }
+
+  const weekdayCap = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  const monthCap = month.charAt(0).toUpperCase() + month.slice(1);
+
+  return `${weekdayCap} ${day} ${monthCap} · ${hour}:${minute}`;
+}
