@@ -1,16 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  background-color: #f0f2f5;
-  overflow-x: clip;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  html, body { margin: 0; padding: 0; }
+  body {
+    @apply bg-bg-0 text-ink-0 font-sans;
+    font-feature-settings: "ss01", "cv11";
+    letter-spacing: -0.005em;
+    min-height: 100vh;
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 /* Form input base style */
@@ -34,4 +39,19 @@ body {
   flex-shrink: 0;
   scroll-snap-align: start;
   overflow: hidden;
+}
+
+@layer utilities {
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-feature-settings: "zero", "ss01"; }
+}
+
+@supports not (color: oklch(0 0 0)) {
+  :root {
+    --danger: #f04a3c;
+    --warn:   #f0a54a;
+    --ok:     #5ac878;
+    --info:   #5a9ad8;
+    --violet: #b07ad8;
+    --lime:   #c6e25a;
+  }
 }
