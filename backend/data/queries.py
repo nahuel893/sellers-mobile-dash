@@ -75,6 +75,51 @@ def query_clientes_vendedor(conn, vendedor, id_sucursal):
     )
 
 
+QUERY_CUPOS_MES = """
+SELECT
+    dc.des_personal_fv1 AS vendedor,
+    fc.sucursal,
+    fc.desagregado     AS grupo_marca,
+    SUM(fc.cupo)::float AS cupo
+FROM gold.fact_cupos fc
+JOIN (
+    SELECT DISTINCT id_sucursal, id_ruta_fv1, des_personal_fv1
+    FROM gold.dim_cliente
+    WHERE id_sucursal = %(id_sucursal)s
+      AND anulado = FALSE
+      AND id_ruta_fv1 IS NOT NULL
+      AND des_personal_fv1 IS NOT NULL
+      AND des_personal_fv1 != ''
+) dc ON dc.id_sucursal = fc.id_sucursal AND dc.id_ruta_fv1 = fc.id_ruta
+WHERE fc.periodo    = %(periodo)s
+  AND fc.id_sucursal = %(id_sucursal)s
+  AND fc.proveedor   = 'CCU'
+  AND fc.desagregado IS NOT NULL
+  AND fc.desagregado != ''
+GROUP BY dc.des_personal_fv1, fc.sucursal, fc.desagregado
+ORDER BY dc.des_personal_fv1, fc.desagregado
+"""
+
+
+def query_cupos_mes(conn, periodo: str, id_sucursal: int = 1):
+    """
+    Trae cupos de venta por vendedor/desagregado para un período desde la DW.
+
+    Args:
+        conn: conexión psycopg2
+        periodo: string 'YYYY-MM' del mes a consultar
+        id_sucursal: id de sucursal (default=1, Casa Central)
+
+    Returns:
+        DataFrame con columnas: vendedor, sucursal, grupo_marca, cupo (float)
+    """
+    return pd.read_sql_query(
+        QUERY_CUPOS_MES,
+        conn,
+        params={'periodo': periodo, 'id_sucursal': int(id_sucursal)},
+    )
+
+
 QUERY_COBERTURA_MES = """
 SELECT
     v.des_personal_fv1 AS vendedor,

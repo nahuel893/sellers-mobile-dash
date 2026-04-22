@@ -1,9 +1,9 @@
 """
-Orquestador de datos: combina ventas de PostgreSQL con cupos de CSV.
+Orquestador de datos: combina ventas y cupos de PostgreSQL.
 Si no hay conexión a BD, usa datos mock como fallback.
 """
-import os
 import logging
+import os
 from datetime import date
 
 import pandas as pd
@@ -16,12 +16,11 @@ except ImportError:
 
 from config import (
     get_dias_habiles,
-    MAPEO_GENERICO_CATEGORIA, MAPEO_MARCA_GRUPO,
+    MAPEO_GENERICO_CATEGORIA, MAPEO_MARCA_GRUPO, MAPEO_DESAGREGADO_CUPO,
 )
 
 logger = logging.getLogger(__name__)
 
-CUPOS_CSV_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'cupos.csv')
 CUPOS_COBERTURA_CSV_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'cupos_cobertura.csv')
 
 # --- Daily cache for get_dataframe ---
@@ -92,18 +91,99 @@ def _mapear_categorias(df):
     return pd.concat([df_cervezas, df_otros], ignore_index=True)
 
 
-def _cargar_cupos_csv():
+def _cargar_supervisores_app_db() -> dict[str, str]:
+    """Load preventista → supervisor mapping from operations schema (app_db).
+
+    Returns:
+        Dict mapping vendedor name → supervisor name.
+        Returns empty dict on error (graceful degradation).
     """
-    Carga cupos y supervisores desde CSV.
-    Columnas esperadas: vendedor, sucursal, supervisor, categoria, grupo_marca, cupo
+    from data.app_db import get_connection, release_connection
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT preventista, supervisor FROM operations.preventistas_supervisores"
+            )
+            return {row[0]: row[1] for row in cur.fetchall()}
+    finally:
+        release_connection(conn)
+
+
+def _mapear_cupos_desagregado(df_raw: pd.DataFrame) -> pd.DataFrame:
+    """Transform raw DW cupos rows into dashboard format.
+
+    Maps desagregado values using MAPEO_DESAGREGADO_CUPO:
+      - 'CERVEZAS'    → categoria='CERVEZAS',     grupo_marca='TOTAL_CERVEZAS'
+      - 'SALTA', etc. → categoria='CERVEZAS',     grupo_marca=desagregado
+      - 'AGUAS DANONE'→ categoria='AGUAS_DANONE', grupo_marca=None
+      - 'MULTICCU'    → categoria='MULTICCU',     grupo_marca=None
+
+    Args:
+        df_raw: DataFrame with columns vendedor, sucursal, grupo_marca (raw desagregado), cupo
+
+    Returns:
+        DataFrame with columns: vendedor, sucursal, categoria, grupo_marca, cupo (int)
     """
-    if not os.path.exists(CUPOS_CSV_PATH):
-        logger.warning('Archivo de cupos no encontrado: %s', CUPOS_CSV_PATH)
+    df = df_raw.copy()
+
+    # Apply MAPEO_DESAGREGADO_CUPO: desagregado → (categoria, grupo_marca)
+    df['_mapped'] = df['grupo_marca'].map(MAPEO_DESAGREGADO_CUPO)
+
+    # Drop rows with no mapping (unknown desagregado values)
+    df = df[df['_mapped'].notna()].copy()
+
+    df['categoria'] = df['_mapped'].apply(lambda x: x[0])
+    df['grupo_marca'] = df['_mapped'].apply(lambda x: x[1])  # None for MULTICCU/AGUAS_DANONE
+
+    df = df.drop(columns=['_mapped'])
+
+    # Round and convert cupo to int (DW gives NUMERIC(15,8))
+    df['cupo'] = df['cupo'].fillna(0).round(0).astype(int)
+
+    return df[['vendedor', 'sucursal', 'categoria', 'grupo_marca', 'cupo']]
+
+
+def _cargar_cupos_db() -> pd.DataFrame | None:
+    """Load sales quotas from gold.fact_cupos (DW) for the current month.
+
+    Joins with dim_cliente to resolve preventista name per route.
+    Applies category/group mapping via MAPEO_DESAGREGADO_CUPO.
+
+    Returns:
+        DataFrame with columns: vendedor, sucursal, supervisor, categoria, grupo_marca, cupo
+        Returns None on connection/query errors (caller handles fallback).
+    """
+    from data.gold_db import get_connection, release_connection
+    from data.queries import query_cupos_mes
+
+    hoy = date.today()
+    periodo = hoy.strftime('%Y-%m')
+
+    conn = get_connection()
+    try:
+        df_raw = query_cupos_mes(conn, periodo)
+    finally:
+        release_connection(conn)
+
+    if df_raw.empty:
+        logger.warning('Query de cupos retornó vacío para periodo %s', periodo)
         return None
 
-    df = pd.read_csv(CUPOS_CSV_PATH)
-    # Normalizar grupo_marca vacío a None
-    df['grupo_marca'] = df['grupo_marca'].where(df['grupo_marca'].notna(), None)
+    # Map desagregado → (categoria, grupo_marca)
+    df = _mapear_cupos_desagregado(df_raw)
+
+    # Load supervisor mapping from app_db
+    try:
+        sup_map = _cargar_supervisores_app_db()
+    except Exception as exc:
+        logger.warning('No se pudo cargar supervisores desde app_db: %s', exc)
+        sup_map = {}
+
+    df['supervisor'] = df['vendedor'].map(sup_map).fillna('SIN SUPERVISOR')
+
+    logger.info('Cupos cargados desde DW (%d filas, periodo %s)', len(df), periodo)
     return df
 
 
@@ -133,12 +213,12 @@ def get_dataframe():
 
 def _load_dataframe():
     """
-    Carga datos desde PostgreSQL + CSV de cupos (o mock como fallback).
+    Carga datos desde PostgreSQL (ventas + cupos DW) o mock como fallback.
     Columnas: vendedor, supervisor, categoria, grupo_marca, ventas, cupo,
               falta, tendencia, pct_tendencia, vta_diaria_necesaria
     """
     try:
-        # 1. Ventas desde BD
+        # 1. Ventas desde BD Gold
         df_ventas = _cargar_ventas_db()
         if df_ventas.empty:
             raise ValueError('Query de ventas retornó vacío')
@@ -146,8 +226,8 @@ def _load_dataframe():
         # 2. Mapear categorías y agrupar
         df_ventas = _mapear_categorias(df_ventas)
 
-        # 3. Cupos desde CSV
-        df_cupos = _cargar_cupos_csv()
+        # 3. Cupos desde DW (gold.fact_cupos) + supervisor desde app_db
+        df_cupos = _cargar_cupos_db()
 
         # 4. Merge ventas + cupos (ambos tienen sucursal en formato "id - nombre")
         if df_cupos is not None and len(df_cupos) > 0:
@@ -173,7 +253,7 @@ def _load_dataframe():
             df['ventas'] = df['ventas'].fillna(0)
             df['cupo'] = df['cupo'].fillna(0).astype(int)
 
-            # Asignar supervisor: para filas sin match en cupos, buscar en el CSV
+            # Asignar supervisor: para filas sin match en cupos, buscar en el df de cupos
             # (un vendedor puede tener ventas en categorías donde no tiene cupo)
             sup_lookup = (
                 df_cupos.dropna(subset=['supervisor'])
@@ -201,11 +281,11 @@ def _load_dataframe():
         # 5. Calcular columnas derivadas
         df = _calcular_columnas_derivadas(df)
 
-        logger.info('Datos cargados desde PostgreSQL + CSV (%d filas)', len(df))
+        logger.info('Datos cargados desde PostgreSQL DW (%d filas)', len(df))
         return df
 
     except _EXPECTED_ERRORS as e:
-        # Errores esperados: sin conexión BD, sin CSV, query vacío
+        # Errores esperados: sin conexión BD, query vacío
         logger.warning('Fallback a datos mock (error de datos): %s', e)
         from data.mock_data import get_mock_dataframe
         return get_mock_dataframe()
@@ -249,16 +329,24 @@ def _cargar_cupos_cobertura_csv():
     return pd.read_csv(CUPOS_COBERTURA_CSV_PATH)
 
 
-def _cargar_supervisor_lookup():
-    """Carga mapeo vendedor+sucursal → supervisor desde cupos.csv."""
-    df_cupos = _cargar_cupos_csv()
-    if df_cupos is None:
-        return pd.DataFrame(columns=['vendedor', 'sucursal', 'supervisor'])
+def _cargar_supervisor_lookup() -> pd.DataFrame:
+    """Carga mapeo vendedor → supervisor desde operations.preventistas_supervisores (app_db).
 
-    return (
-        df_cupos.dropna(subset=['supervisor'])
-        .drop_duplicates(subset=['vendedor', 'sucursal'])
-        [['vendedor', 'sucursal', 'supervisor']]
+    Returns:
+        DataFrame with columns: vendedor, supervisor
+    """
+    try:
+        sup_map = _cargar_supervisores_app_db()
+    except Exception as exc:
+        logger.warning('No se pudo cargar supervisores para lookup: %s', exc)
+        return pd.DataFrame(columns=['vendedor', 'supervisor'])
+
+    if not sup_map:
+        return pd.DataFrame(columns=['vendedor', 'supervisor'])
+
+    return pd.DataFrame(
+        [(k, v) for k, v in sup_map.items()],
+        columns=['vendedor', 'supervisor'],
     )
 
 
@@ -310,9 +398,9 @@ def _load_cobertura_dataframe():
             axis=1,
         )
 
-        # 5. Asignar supervisor desde cupos.csv
+        # 5. Asignar supervisor desde operations.preventistas_supervisores
         sup_lookup = _cargar_supervisor_lookup()
-        df = df.merge(sup_lookup, on=['vendedor', 'sucursal'], how='left')
+        df = df.merge(sup_lookup, on=['vendedor'], how='left')
         df['supervisor'] = df['supervisor'].fillna('SIN SUPERVISOR')
 
         logger.info('Datos de cobertura cargados (%d filas)', len(df))
