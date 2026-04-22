@@ -34,16 +34,16 @@ export default function PlatformHome() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-bg-0">
       {/* Header */}
-      <header className="bg-gradient-to-br from-brand-dark to-brand-dark2 text-white px-4 pt-5 pb-4 rounded-b-[20px] xl:flex xl:items-center xl:justify-between xl:px-8">
+      <header className="bg-bg-1 border-b border-line text-ink-0 px-4 pt-5 pb-4 rounded-b-[20px] xl:flex xl:items-center xl:justify-between xl:px-8">
         <div className="xl:flex xl:items-baseline xl:gap-4">
           <div className="flex items-baseline justify-between">
             <h1 className="text-lg font-extrabold tracking-tight">Plataforma Preventa</h1>
             {user && (
               <button
                 onClick={logout}
-                className="text-xs text-white/60 hover:text-white underline ml-4 xl:hidden"
+                className="text-xs text-ink-2 hover:text-ink-0 underline ml-4 xl:hidden"
                 type="button"
               >
                 Salir
@@ -61,14 +61,14 @@ export default function PlatformHome() {
           {data && (
             <div className="flex gap-2 flex-1 xl:flex-none">
               <DayBox label="Días hábiles" value={data.habiles} />
-              <DayBox label="Transcurridos" value={data.transcurridos} colorClass="text-[#64B5F6]" />
-              <DayBox label="Faltan" value={data.restantes} colorClass="text-[#FFC107]" />
+              <DayBox label="Transcurridos" value={data.transcurridos} colorClass="text-info" />
+              <DayBox label="Faltan" value={data.restantes} colorClass="text-warn" />
             </div>
           )}
           {user && (
             <button
               onClick={logout}
-              className="hidden xl:block text-xs text-white/60 hover:text-white underline whitespace-nowrap"
+              className="hidden xl:block text-xs text-ink-2 hover:text-ink-0 underline whitespace-nowrap"
               type="button"
             >
               Cerrar sesión
@@ -80,8 +80,8 @@ export default function PlatformHome() {
       {/* User greeting */}
       {user && (
         <div className="px-4 pt-5 pb-2">
-          <p className="text-sm text-gray-500">
-            Hola, <span className="font-semibold text-brand-dark">{user.nombre_completo || user.username}</span>
+          <p className="text-sm text-ink-2">
+            Hola, <span className="font-semibold text-ink-0">{user.nombre_completo || user.username}</span>
           </p>
         </div>
       )}
@@ -99,18 +99,18 @@ export default function PlatformHome() {
 function DayBox({
   label,
   value,
-  colorClass = 'text-white',
+  colorClass = 'text-ink-0',
 }: {
   label: string;
   value: number;
   colorClass?: string;
 }) {
   return (
-    <div className="flex-1 bg-white/10 rounded-[10px] py-2 px-2.5 text-center">
-      <div className="text-[10px] uppercase tracking-wider text-white/50 font-medium">
+    <div className="flex-1 bg-bg-2 border border-line rounded-[10px] py-2 px-2.5 text-center">
+      <div className="text-[10px] uppercase tracking-wider text-ink-2 font-medium">
         {label}
       </div>
-      <div className={`text-xl font-bold ${colorClass}`}>{value}</div>
+      <div className={`text-xl font-mono font-bold ${colorClass}`}>{value}</div>
     </div>
   );
 }

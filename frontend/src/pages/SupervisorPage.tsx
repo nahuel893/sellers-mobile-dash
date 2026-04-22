@@ -25,11 +25,11 @@ export default function SupervisorPage() {
       <BackLink to={backTo} />
 
       {isLoading && (
-        <p className="text-center text-sm text-gray-400 py-8">Cargando datos...</p>
+        <p className="text-center text-sm text-ink-2 py-8">Cargando datos...</p>
       )}
 
       {error && (
-        <p className="text-center text-sm text-red-500 py-8">Error al cargar datos</p>
+        <p className="text-center text-sm text-danger py-8">Error al cargar datos</p>
       )}
 
       {data && (

@@ -77,8 +77,8 @@ export default function CategoryCarousel({
               onClick={() => goToSlide(i)}
               className={`w-2 h-2 rounded-full transition-all ${
                 i === activeIndex
-                  ? 'bg-brand-dark scale-125'
-                  : 'bg-gray-300 hover:bg-gray-400'
+                  ? 'bg-ink-0 scale-125'
+                  : 'bg-ink-3 hover:bg-ink-2'
               }`}
               aria-label={`Slide ${i + 1}`}
             />

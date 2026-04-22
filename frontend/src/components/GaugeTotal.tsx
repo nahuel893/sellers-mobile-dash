@@ -26,7 +26,7 @@ export default function GaugeTotal({
     : 0;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 xl:flex xl:items-center xl:gap-8 xl:p-6">
+    <div className="bg-bg-1 border border-line rounded-xl p-4 xl:flex xl:items-center xl:gap-8 xl:p-6">
       <div className="mx-auto w-[260px] xl:w-[240px] xl:flex-shrink-0">
         <GaugeSvg
           value={pctTendencia}
@@ -38,7 +38,7 @@ export default function GaugeTotal({
       <div className="flex flex-wrap gap-3 mt-3 xl:mt-0 xl:flex-1">
         <MetricBox label="Vendido" value={fmtNum(ventas)} />
         <MetricBox label="Cupo" value={fmtNum(cupo)} />
-        <MetricBox label="Falta" value={fmtNum(falta)} className="text-perf-red" />
+        <MetricBox label="Falta" value={fmtNum(falta)} className="text-danger" />
         <MetricBox label="Tendencia" value={fmtNum(tendencia)} />
         {vtaDiaria > 0 && (
           <MetricBox label="Vta/Día" value={fmtNum(vtaDiaria)} className="text-orange-500" />
@@ -59,10 +59,10 @@ function MetricBox({
 }) {
   return (
     <div className="flex-1 min-w-[70px] text-center">
-      <div className="text-xs xl:text-base uppercase tracking-wider text-gray-500 font-medium">
+      <div className="text-xs xl:text-base uppercase tracking-wider text-ink-2 font-medium">
         {label}
       </div>
-      <div className={`text-2xl xl:text-4xl font-bold text-brand-dark ${className}`}>
+      <div className={`text-2xl xl:text-4xl font-mono font-bold text-ink-0 ${className}`}>
         {value}
       </div>
     </div>

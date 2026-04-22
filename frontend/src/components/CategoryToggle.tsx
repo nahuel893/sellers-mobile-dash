@@ -14,8 +14,8 @@ export default function CategoryToggle({ activeIndex, onChange }: CategoryToggle
           onClick={() => onChange(i)}
           className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
             i === activeIndex
-              ? 'bg-brand-dark text-white border-brand-dark'
-              : 'bg-white text-brand-dark border-gray-300 hover:border-gray-400'
+              ? 'bg-ink-0 text-bg-0 border-ink-0'
+              : 'bg-bg-2 text-ink-1 border-line hover:border-ink-2'
           }`}
         >
           {label}

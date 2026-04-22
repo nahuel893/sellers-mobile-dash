@@ -13,7 +13,7 @@ export default function CoberturaSection({ vendedores }: CoberturaSectionProps) 
 
   return (
     <div className="mx-2 mt-4 mb-4">
-      <h2 className="text-sm font-bold text-brand-dark uppercase tracking-wider px-1 mb-2">
+      <h2 className="text-sm font-bold text-ink-0 uppercase tracking-wider px-1 mb-2">
         Cobertura
       </h2>
 
@@ -22,15 +22,15 @@ export default function CoberturaSection({ vendedores }: CoberturaSectionProps) 
         const marcas = [...v.marcas].sort((a, b) => b.cupo - a.cupo);
 
         return (
-          <div key={v.vendedor} className="bg-white rounded-xl shadow-sm mb-2 overflow-hidden">
+          <div key={v.vendedor} className="bg-bg-1 border border-line rounded-xl mb-2 overflow-hidden">
             <button
               type="button"
               className="w-full flex items-center justify-between px-3 py-3 text-left"
               onClick={() => setExpandedVendor(expanded ? null : v.vendedor)}
             >
-              <h3 className="text-sm font-bold text-brand-dark truncate">{v.vendedor}</h3>
+              <h3 className="text-sm font-bold text-ink-0 truncate">{v.vendedor}</h3>
               <span
-                className="text-gray-400 text-lg transition-transform ml-2"
+                className="text-ink-2 text-lg transition-transform ml-2"
                 style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
               >
                 &#9662;
@@ -38,10 +38,10 @@ export default function CoberturaSection({ vendedores }: CoberturaSectionProps) 
             </button>
 
             {expanded && (
-              <div className="border-t border-gray-100 px-2 pb-3 pt-1 overflow-x-auto">
+              <div className="border-t border-line px-2 pb-3 pt-1 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-[10px] uppercase text-gray-500 tracking-wider">
+                    <tr className="text-[10px] uppercase text-ink-2 tracking-wider">
                       <th className="text-left py-1 px-1 font-medium">Marca</th>
                       <th className="text-right py-1 px-1 font-medium">Real</th>
                       <th className="text-right py-1 px-1 font-medium">Cupo</th>
@@ -58,18 +58,18 @@ export default function CoberturaSection({ vendedores }: CoberturaSectionProps) 
                       return (
                         <>
                           {showHeader && (
-                            <tr key={`hdr-${m.generico}`} className="bg-gray-50">
-                              <td colSpan={5} className="py-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                            <tr key={`hdr-${m.generico}`} className="bg-bg-2">
+                              <td colSpan={5} className="py-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-ink-2">
                                 {m.generico}
                               </td>
                             </tr>
                           )}
-                          <tr key={m.marca} className="border-t border-gray-50">
-                            <td className="py-1.5 px-1 pl-3 font-semibold text-brand-dark text-xs">{m.marca}</td>
-                            <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.cobertura}</td>
-                            <td className="py-1.5 px-1 text-right font-bold text-brand-dark">{m.cupo}</td>
-                            <td className="py-1.5 px-1 text-right font-bold text-red-500">{falta > 0 ? `-${falta}` : '—'}</td>
-                            <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.pct_cobertura.toFixed(0)}%</td>
+                          <tr key={m.marca} className="border-t border-line">
+                            <td className="py-1.5 px-1 pl-3 font-semibold text-ink-1 text-xs">{m.marca}</td>
+                            <td className="py-1.5 px-1 text-right font-mono font-bold" style={{ color }}>{m.cobertura}</td>
+                            <td className="py-1.5 px-1 text-right font-mono font-bold text-ink-0">{m.cupo}</td>
+                            <td className="py-1.5 px-1 text-right font-mono font-bold text-danger">{falta > 0 ? `-${falta}` : '—'}</td>
+                            <td className="py-1.5 px-1 text-right font-mono font-bold" style={{ color }}>{m.pct_cobertura.toFixed(0)}%</td>
                           </tr>
                         </>
                       );

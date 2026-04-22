@@ -29,11 +29,11 @@ export default function SucursalPage() {
       <BackLink to="/sellers" />
 
       {isLoading && (
-        <p className="text-center text-sm text-gray-400 py-8">Cargando datos...</p>
+        <p className="text-center text-sm text-ink-2 py-8">Cargando datos...</p>
       )}
 
       {error && (
-        <p className="text-center text-sm text-red-500 py-8">Error al cargar datos</p>
+        <p className="text-center text-sm text-danger py-8">Error al cargar datos</p>
       )}
 
       {sucursalData && (
@@ -56,23 +56,23 @@ export default function SucursalPage() {
             return (
               <div
                 key={nombre}
-                className="border-t-2 border-gray-300 bg-gradient-to-b from-gray-50 to-white rounded-lg mt-3 mx-2 overflow-hidden"
+                className="border-t-2 border-line bg-bg-1 rounded-lg mt-3 mx-2 overflow-hidden"
               >
                 <div className="flex items-baseline gap-2 px-3 pt-3">
                   <Link
                     to={`/sellers/supervisor/${slug}?sucursal=${id}`}
-                    className="text-sm font-bold text-brand-dark hover:underline no-underline"
+                    className="text-sm font-bold text-ink-0 hover:underline no-underline"
                   >
                     {nombre}
                   </Link>
                   {query?.data && (
-                    <span className="text-xs text-gray-400 font-medium">
+                    <span className="text-xs text-ink-2 font-mono font-medium">
                       {supPct.toFixed(1)}%
                     </span>
                   )}
                 </div>
                 {query?.isLoading && (
-                  <p className="text-xs text-gray-400 px-3 py-4">Cargando...</p>
+                  <p className="text-xs text-ink-2 px-3 py-4">Cargando...</p>
                 )}
                 {query?.data && (
                   <CategoryCarousel
