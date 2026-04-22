@@ -84,6 +84,57 @@ class DiasHabilesResponse(BaseModel):
 
 # --- Cobertura ---
 
+# --- Dashboard redesign schemas ---
+
+class PreventistaItem(BaseModel):
+    """Preventista para la barra lateral del dashboard."""
+    nombre: str
+    slug: str
+    iniciales: str
+    ruta: str | None = None
+
+
+class SparklineDia(BaseModel):
+    """Punto de ventas de un día en el sparkline."""
+    fecha: str  # ISO date string
+    por_grupo: dict[str, int]
+
+
+class SparklineResponse(BaseModel):
+    """Respuesta del endpoint de sparkline."""
+    vendedor: str
+    dias: int
+    puntos: list[SparklineDia]
+
+
+class BrandDelta(BaseModel):
+    """Delta de porcentaje para un grupo de marca (actual vs mes anterior)."""
+    grupo_marca: str
+    pct_actual: float
+    pct_anterior: float | None
+    delta_pp: float | None
+
+
+class DeltaResponse(BaseModel):
+    """Respuesta del endpoint de delta pp."""
+    vendedor: str
+    deltas: list[BrandDelta]
+
+
+class WeatherResponse(BaseModel):
+    """Respuesta del endpoint de clima."""
+    city: str
+    temp_c: int
+    feels_like_c: int
+    min_c: int
+    max_c: int
+    humidity_pct: int
+    wind_kmh: int
+    condition: str
+    icon: str
+    observed_at: str  # ISO datetime
+
+
 class CoberturaMarcaItem(BaseModel):
     """Cobertura de una marca para un vendedor."""
     marca: str
