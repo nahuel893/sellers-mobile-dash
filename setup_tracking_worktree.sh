@@ -7,7 +7,7 @@
 set -euo pipefail
 
 SOURCE_DIR="/home/nahuel/projects/work/seller-mobile-dashboard"
-WORKTREE_DIR="/home/nahuel/projects/work/sellers-mobile-dashboard-tracking"
+WORKTREE_DIR="/home/nahuel/projects/work/seller-mobile-dashboard-tracking"
 
 # Sanity checks
 if [[ ! -d "$SOURCE_DIR" ]]; then
