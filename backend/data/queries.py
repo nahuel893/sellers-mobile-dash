@@ -120,6 +120,137 @@ def query_cupos_mes(conn, periodo: str, id_sucursal: int = 1):
     )
 
 
+QUERY_SPARKLINE_VENDEDOR = """
+SELECT
+    fv.fecha_comprobante::date AS fecha,
+    da.marca,
+    SUM(fv.cantidades_total) AS ventas
+FROM gold.fact_ventas fv
+JOIN gold.dim_articulo da
+    ON fv.id_articulo = da.id_articulo
+JOIN gold.dim_cliente dc
+    ON fv.id_cliente = dc.id_cliente
+    AND fv.id_sucursal = dc.id_sucursal
+WHERE fv.id_sucursal = %(id_sucursal)s
+  AND fv.fecha_comprobante >= CURRENT_DATE - make_interval(days => %(dias)s)
+  AND da.generico = %(generico)s
+  {vendedor_filter}
+GROUP BY fv.fecha_comprobante::date, da.marca
+ORDER BY fecha, marca
+"""
+
+
+def query_sparkline_vendedor(conn, vendedor: str | None, dias: int,
+                             generico: str = 'CERVEZAS', id_sucursal: int = 1):
+    """
+    Trae ventas diarias por marca para el sparkline.
+
+    Args:
+        conn: conexión psycopg2
+        vendedor: nombre del vendedor (des_personal_fv1). None = agregado (casa central).
+        dias: cantidad de días hacia atrás desde hoy.
+        generico: categoría de producto (default CERVEZAS).
+        id_sucursal: id de sucursal (default=1).
+
+    Returns:
+        Lista de tuplas (fecha, marca, ventas).
+    """
+    if vendedor is not None:
+        vendedor_filter = "AND dc.des_personal_fv1 = %(vendedor)s"
+        params = {
+            'id_sucursal': id_sucursal,
+            'dias': dias,
+            'generico': generico,
+            'vendedor': vendedor,
+        }
+    else:
+        vendedor_filter = ""
+        params = {
+            'id_sucursal': id_sucursal,
+            'dias': dias,
+            'generico': generico,
+        }
+
+    sql = QUERY_SPARKLINE_VENDEDOR.format(vendedor_filter=vendedor_filter)
+    with conn.cursor() as cur:
+        cur.execute(sql, params)
+        return cur.fetchall()
+
+
+QUERY_PRIOR_MONTH_VENTAS = """
+SELECT
+    da.marca AS grupo_marca_raw,
+    SUM(fv.cantidades_total) AS ventas_prior,
+    SUM(fc.cupo) AS cupo_prior
+FROM gold.fact_ventas fv
+JOIN gold.dim_articulo da
+    ON fv.id_articulo = da.id_articulo
+JOIN gold.dim_cliente dc
+    ON fv.id_cliente = dc.id_cliente
+    AND fv.id_sucursal = dc.id_sucursal
+JOIN gold.fact_cupos fc
+    ON fc.id_sucursal = fv.id_sucursal
+    AND fc.id_ruta = dc.id_ruta_fv1
+    AND fc.proveedor = 'CCU'
+    AND fc.desagregado = da.marca
+    AND fc.periodo = %(periodo)s
+WHERE fv.id_sucursal = %(id_sucursal)s
+  AND fv.fecha_comprobante >= %(fecha_desde)s
+  AND fv.fecha_comprobante <= %(fecha_hasta)s
+  AND da.generico = %(generico)s
+  {vendedor_filter}
+GROUP BY da.marca
+"""
+
+
+def query_prior_month_ventas(conn, vendedor: str | None, categoria: str = 'CERVEZAS',
+                              id_sucursal: int = 1) -> list[tuple]:
+    """
+    Trae ventas y cupos del mes anterior por grupo_marca.
+
+    Returns:
+        Lista de tuplas (grupo_marca, ventas_prior, cupo_prior).
+    """
+    from datetime import date
+
+    hoy = date.today()
+    if hoy.month == 1:
+        year_p, month_p = hoy.year - 1, 12
+    else:
+        year_p, month_p = hoy.year, hoy.month - 1
+
+    import calendar
+    _, last_day = calendar.monthrange(year_p, month_p)
+    fecha_desde = date(year_p, month_p, 1)
+    fecha_hasta = date(year_p, month_p, last_day)
+    periodo = f'{year_p}-{month_p:02d}'
+
+    if vendedor is not None:
+        vendedor_filter = "AND dc.des_personal_fv1 = %(vendedor)s"
+        params = {
+            'id_sucursal': id_sucursal,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'generico': categoria,
+            'periodo': periodo,
+            'vendedor': vendedor,
+        }
+    else:
+        vendedor_filter = ""
+        params = {
+            'id_sucursal': id_sucursal,
+            'fecha_desde': fecha_desde,
+            'fecha_hasta': fecha_hasta,
+            'generico': categoria,
+            'periodo': periodo,
+        }
+
+    sql = QUERY_PRIOR_MONTH_VENTAS.format(vendedor_filter=vendedor_filter)
+    with conn.cursor() as cur:
+        cur.execute(sql, params)
+        return cur.fetchall()
+
+
 QUERY_COBERTURA_MES = """
 SELECT
     v.des_personal_fv1 AS vendedor,

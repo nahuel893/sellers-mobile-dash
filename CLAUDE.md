@@ -115,6 +115,10 @@ PostgreSQL (Gold DW) + CSV quotas (data/cupos.csv)
 | GET | `/api/supervisor/{slug}?sucursal=` | Supervisor detail |
 | GET | `/api/sucursal/{id}` | Branch detail |
 | GET | `/api/mapa/{slug}?sucursal=` | Customer coordinates |
+| GET | `/api/preventistas?sucursal=` | Preventistas list for seller rail |
+| GET | `/api/avance/sparkline/{slug}?dias=&categoria=` | Daily sales sparkline by brand group |
+| GET | `/api/avance/delta/{slug}?categoria=` | Delta pp vs prior month by brand group |
+| GET | `/api/weather?city=` | Weather proxy (OpenWeatherMap, in-process cache 10 min) |
 
 Interactive docs: `http://localhost:8000/docs`
 

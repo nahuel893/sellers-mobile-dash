@@ -73,6 +73,9 @@ from routers.dashboard import router as dashboard_router
 from routers.mapa import router as mapa_router
 from routers.config_router import router as config_router
 from routers.cobertura import router as cobertura_router
+from routers.preventistas import router as preventistas_router
+from routers.avance import router as avance_router
+from routers.weather import router as weather_router
 from auth.router import router as auth_router
 from auth.admin_router import router as admin_router
 
@@ -80,6 +83,9 @@ app.include_router(dashboard_router)
 app.include_router(mapa_router)
 app.include_router(config_router)
 app.include_router(cobertura_router)
+app.include_router(preventistas_router)
+app.include_router(avance_router)
+app.include_router(weather_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
 
