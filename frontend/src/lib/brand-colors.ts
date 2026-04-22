@@ -8,14 +8,14 @@ export const BRAND_TO_TOKEN: Record<string, 'info' | 'ok' | 'warn' | 'lime' | 'v
   IMPORTADAS: 'danger',
 };
 
-/** Brand → Tailwind bg class for colored dot indicators */
+/** Brand → Tailwind bg class for colored dot indicators (uses brand.* oklch palette) */
 export const BRAND_TO_DOT: Record<string, string> = {
-  SALTA: 'bg-brand-info',
-  HEINEKEN: 'bg-brand-ok',
-  IMPERIAL: 'bg-brand-warn',
-  MILLER: 'bg-brand-lime',
-  MULTICERVEZAS: 'bg-brand-violet',
-  IMPORTADAS: 'bg-brand-danger',
+  SALTA: 'bg-brand-salta',
+  HEINEKEN: 'bg-brand-heine',
+  IMPERIAL: 'bg-brand-imper',
+  MILLER: 'bg-brand-mille',
+  MULTICERVEZAS: 'bg-brand-multi',
+  IMPORTADAS: 'bg-brand-impor',
 };
 
 /**
