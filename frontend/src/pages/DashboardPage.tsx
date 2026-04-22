@@ -338,7 +338,8 @@ export default function DashboardPage() {
         'xl:pl-[84px] xl:pr-9 xl:pt-7 xl:pb-12',
         // Tablet + mobile: no left padding (rail becomes horizontal strip)
         'md:px-4 md:pt-5 md:pb-12',
-        'px-0 pt-0 pb-24',
+        // Mobile: 90px bottom to clear fixed BottomNav (RF-MOBILE-RESPONSIVE-04)
+        'px-0 pt-0 pb-[90px] md:pb-12',
       ].join(' ')}
     >
       {/* Seller rail — outside AnimatePresence so it stays static */}

@@ -189,8 +189,12 @@ export function HeroCard({
         ritmoRequerido={ritmoRequerido}
       />
 
-      {/* ── Weather (desktop, embedded) ── */}
-      {showWeather && <WeatherWidget variant="desktop" city="salta" />}
+      {/* ── Weather (desktop only — hidden on mobile; mobile variant renders below brand list) ── */}
+      {showWeather && (
+        <div className="hidden md:block">
+          <WeatherWidget variant="desktop" city="salta" />
+        </div>
+      )}
     </div>
   );
 }

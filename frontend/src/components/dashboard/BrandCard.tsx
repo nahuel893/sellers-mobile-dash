@@ -40,7 +40,7 @@ function BrandCardBase({
 
   return (
     <article
-      className="bg-bg-1 border border-line rounded-[14px] p-[18px] relative overflow-hidden
+      className="bg-bg-1 border border-line rounded-[14px] p-4 md:p-[18px] relative overflow-hidden
                  transition-colors duration-200 hover:border-line-2"
       style={{
         ['--card-color' as string]: `var(--color-${colorToken}, currentColor)`,
