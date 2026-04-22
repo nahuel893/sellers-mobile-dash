@@ -23,7 +23,7 @@ export default function CategorySlide({ categoryKey, data }: CategorySlideProps)
 
   return (
     <div className="px-2 py-3">
-      <h3 className="text-sm font-bold text-brand-dark uppercase tracking-wider mb-2 px-1">
+      <h3 className="text-sm font-bold text-ink-0 uppercase tracking-wider mb-2 px-1">
         {title}
       </h3>
       <GaugeTotal
@@ -37,7 +37,7 @@ export default function CategorySlide({ categoryKey, data }: CategorySlideProps)
 
       {brandCards.length > 0 && (
         <>
-          <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2 px-1">
+          <h4 className="text-sm font-bold text-ink-2 uppercase tracking-wider mt-4 mb-2 px-1">
             Detalle por Marca
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

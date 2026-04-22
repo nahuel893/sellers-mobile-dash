@@ -21,26 +21,26 @@ export default function VendedorPage() {
       <BackLink to="/sellers" />
 
       <div className="flex items-baseline gap-2 px-3 pb-2">
-        <h1 className="text-lg font-extrabold text-brand-dark">{data?.nombre ?? nombre}</h1>
+        <h1 className="text-lg font-extrabold text-ink-0">{data?.nombre ?? nombre}</h1>
         {data && (
-          <span className="text-xs text-gray-400 font-medium">{pct.toFixed(1)}%</span>
+          <span className="text-xs text-ink-2 font-mono font-medium">{pct.toFixed(1)}%</span>
         )}
       </div>
 
       {isLoading && (
-        <p className="text-center text-sm text-gray-400 py-8">Cargando datos...</p>
+        <p className="text-center text-sm text-ink-2 py-8">Cargando datos...</p>
       )}
 
       {error && (
-        <p className="text-center text-sm text-red-500 py-8">Error al cargar datos</p>
+        <p className="text-center text-sm text-danger py-8">Error al cargar datos</p>
       )}
 
       {data && CATEGORIES.map((key) => {
         const catData = data.categories[key];
         if (!catData) return null;
         return (
-          <div key={key} className="border-t border-gray-200 mt-2 mx-2">
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider px-3 pt-3">
+          <div key={key} className="border-t border-line mt-2 mx-2">
+            <h3 className="text-xs font-bold text-ink-2 uppercase tracking-wider px-3 pt-3">
               {CATEGORY_NAMES[key as CategoryKey]}
             </h3>
             <CategorySlide categoryKey={key as CategoryKey} data={catData} />
@@ -49,14 +49,14 @@ export default function VendedorPage() {
       })}
 
       {marcas.length > 0 && (
-        <div className="border-t border-gray-200 mt-2 mx-2">
-          <h3 className="text-sm font-bold text-brand-dark uppercase tracking-wider px-3 pt-3 pb-2">
+        <div className="border-t border-line mt-2 mx-2">
+          <h3 className="text-sm font-bold text-ink-0 uppercase tracking-wider px-3 pt-3 pb-2">
             Cobertura
           </h3>
-          <div className="bg-white rounded-xl shadow-sm px-2 py-2 mx-2 mb-4 overflow-x-auto">
+          <div className="bg-bg-1 border border-line rounded-xl px-2 py-2 mx-2 mb-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[10px] uppercase text-gray-500 tracking-wider">
+                <tr className="text-[10px] uppercase text-ink-2 tracking-wider">
                   <th className="text-left py-1 px-1 font-medium">Marca</th>
                   <th className="text-right py-1 px-1 font-medium">Real</th>
                   <th className="text-right py-1 px-1 font-medium">Cupo</th>
@@ -73,18 +73,18 @@ export default function VendedorPage() {
                   return (
                     <>
                       {showHeader && (
-                        <tr key={`hdr-${m.generico}`} className="bg-gray-50">
-                          <td colSpan={5} className="py-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                        <tr key={`hdr-${m.generico}`} className="bg-bg-2">
+                          <td colSpan={5} className="py-1.5 px-1 text-[10px] font-bold uppercase tracking-wider text-ink-2">
                             {m.generico}
                           </td>
                         </tr>
                       )}
-                      <tr key={m.marca} className="border-t border-gray-50">
-                        <td className="py-1.5 px-1 pl-3 font-semibold text-brand-dark text-xs">{m.marca}</td>
-                        <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.cobertura}</td>
-                        <td className="py-1.5 px-1 text-right font-bold text-brand-dark">{m.cupo}</td>
-                        <td className="py-1.5 px-1 text-right font-bold text-red-500">{falta > 0 ? `-${falta}` : '—'}</td>
-                        <td className="py-1.5 px-1 text-right font-bold" style={{ color }}>{m.pct_cobertura.toFixed(0)}%</td>
+                      <tr key={m.marca} className="border-t border-line">
+                        <td className="py-1.5 px-1 pl-3 font-semibold text-ink-1 text-xs">{m.marca}</td>
+                        <td className="py-1.5 px-1 text-right font-mono font-bold" style={{ color }}>{m.cobertura}</td>
+                        <td className="py-1.5 px-1 text-right font-mono font-bold text-ink-0">{m.cupo}</td>
+                        <td className="py-1.5 px-1 text-right font-mono font-bold text-danger">{falta > 0 ? `-${falta}` : '—'}</td>
+                        <td className="py-1.5 px-1 text-right font-mono font-bold" style={{ color }}>{m.pct_cobertura.toFixed(0)}%</td>
                       </tr>
                     </>
                   );

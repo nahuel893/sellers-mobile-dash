@@ -15,16 +15,16 @@ export default function VendorBlock({ vendedor, globalSlideIndex }: VendorBlockP
   return (
     <div
       id={anchorId}
-      className="border-t border-gray-200 mt-3 mx-2 scroll-mt-[200px]"
+      className="border-t border-line mt-3 mx-2 scroll-mt-[200px]"
     >
       <div className="flex items-baseline gap-2 px-3 pt-3">
         <Link
           to={`/sellers/vendedor/${vendedor.slug}`}
-          className="text-sm font-bold text-brand-dark hover:underline no-underline"
+          className="text-sm font-bold text-ink-0 hover:underline no-underline"
         >
           {vendedor.nombre}
         </Link>
-        <span className="text-xs text-gray-400 font-medium">
+        <span className="text-xs text-ink-2 font-mono font-medium">
           {pct.toFixed(1)}%
         </span>
       </div>

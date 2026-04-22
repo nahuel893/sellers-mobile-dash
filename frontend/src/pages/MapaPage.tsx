@@ -17,28 +17,28 @@ export default function MapaPage() {
       <BackLink to="/sellers" />
 
       <div className="px-3 pb-3">
-        <h1 className="text-lg font-extrabold text-brand-dark">
+        <h1 className="text-lg font-extrabold text-ink-0">
           Clientes de {nombre}
         </h1>
         {clientes && (
-          <span className="text-xs text-gray-400 font-medium">
+          <span className="text-xs text-ink-2 font-mono font-medium">
             {clientes.length} clientes
           </span>
         )}
       </div>
 
       {isLoading && (
-        <p className="text-center text-sm text-gray-400 py-8">Cargando mapa...</p>
+        <p className="text-center text-sm text-ink-2 py-8">Cargando mapa...</p>
       )}
 
       {error && (
-        <p className="text-center text-sm text-red-500 py-8">
+        <p className="text-center text-sm text-danger py-8">
           Error al cargar el mapa. Intente nuevamente.
         </p>
       )}
 
       {clientes && clientes.length === 0 && (
-        <p className="text-center text-sm text-gray-400 py-8">
+        <p className="text-center text-sm text-ink-2 py-8">
           Sin clientes con coordenadas para {nombre}
         </p>
       )}

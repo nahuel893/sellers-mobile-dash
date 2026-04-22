@@ -31,7 +31,7 @@ export default function CustomerMap({ clientes }: CustomerMapProps) {
     <MapContainer
       center={center}
       zoom={12}
-      className="h-[500px] w-full rounded-lg"
+      className="h-[500px] w-full rounded-lg border border-line"
       scrollWheelZoom={true}
     >
       <TileLayer

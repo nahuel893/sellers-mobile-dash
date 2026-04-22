@@ -54,11 +54,11 @@ function FilterSelect({
 }) {
   return (
     <div className="flex-1">
-      <label className="block text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1">
+      <label className="block text-[10px] uppercase tracking-wider text-ink-2 font-semibold mb-1">
         {label}
       </label>
       <select
-        className="w-full rounded-[10px] border border-gray-300 bg-white px-3 py-2 text-sm text-brand-dark font-medium appearance-none cursor-pointer focus:outline-none focus:border-brand-dark"
+        className="w-full rounded-[10px] border border-line bg-bg-2 px-3 py-2 text-sm text-ink-0 font-medium appearance-none cursor-pointer focus:outline-none focus:border-ink-2"
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}

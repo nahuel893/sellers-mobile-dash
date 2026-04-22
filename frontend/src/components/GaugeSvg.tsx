@@ -51,7 +51,7 @@ export default function GaugeSvg({
       <path
         d={arcPath}
         fill="none"
-        stroke="#e9ecef"
+        stroke="#26221a"
         strokeWidth={strokeWidth}
         strokeLinecap="round"
       />
@@ -72,7 +72,7 @@ export default function GaugeSvg({
           y1={tickY1.toFixed(2)}
           x2={tickX2.toFixed(2)}
           y2={tickY2.toFixed(2)}
-          stroke="#6c757d"
+          stroke="#928a75"
           strokeWidth={2}
           strokeLinecap="round"
         />
@@ -85,8 +85,8 @@ export default function GaugeSvg({
         dominantBaseline="auto"
         fontSize={fontSize}
         fontWeight={700}
-        fontFamily="Inter, sans-serif"
-        fill="#1a1a2e"
+        fontFamily="JetBrains Mono, ui-monospace, monospace"
+        fill="#f5efdd"
       >
         {value.toFixed(1)}%
       </text>
