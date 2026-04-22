@@ -4,7 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
 import LoginPage from './pages/LoginPage';
 import PlatformHome from './pages/PlatformHome';
-import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
 import VendedorPage from './pages/VendedorPage';
 import SupervisorPage from './pages/SupervisorPage';
 import SucursalPage from './pages/SucursalPage';
@@ -27,7 +27,7 @@ export default function App() {
             <Route path="/" element={<PlatformHome />} />
 
             {/* Sellers dashboard and sub-pages */}
-            <Route path="/sellers" element={<HomePage />} />
+            <Route path="/sellers" element={<DashboardPage />} />
             <Route path="/sellers/vendedor/:slug" element={<VendedorPage />} />
             <Route path="/sellers/supervisor/:slug" element={<SupervisorPage />} />
             <Route path="/sellers/sucursal/:id" element={<SucursalPage />} />
