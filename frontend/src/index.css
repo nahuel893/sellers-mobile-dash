@@ -43,6 +43,14 @@
 
 @layer utilities {
   .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-feature-settings: "zero", "ss01"; }
+
+  /* RF-ACCESSIBILITY-02: visible focus ring for keyboard navigation */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid oklch(0.86 0.18 115);
+    outline-offset: 2px;
+  }
 }
 
 @supports not (color: oklch(0 0 0)) {
