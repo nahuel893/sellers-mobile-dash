@@ -64,20 +64,39 @@ export function SellerButton({
       onClick={onClick}
       onMouseEnter={onMouseEnter}
     >
-      {/* Active indicator bar (desktop only) — positioned at -13px left */}
+      {/* Active indicator bar:
+          - xl (desktop): 3×20px bar at left:-13px (vertical rail)
+          - <xl (mobile strip): 10×3px bar at bottom:-8px (horizontal strip)
+      */}
       {isActive && !isCC && (
-        <span
-          className="absolute rounded-sm bg-lime"
-          style={{
-            left: -13,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 3,
-            height: 20,
-            boxShadow: '0 0 8px oklch(0.86 0.18 115)',
-          }}
-          aria-hidden="true"
-        />
+        <>
+          {/* Desktop left bar (hidden on mobile) */}
+          <span
+            className="hidden xl:block absolute rounded-sm bg-lime"
+            style={{
+              left: -13,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 3,
+              height: 20,
+              boxShadow: '0 0 8px oklch(0.86 0.18 115)',
+            }}
+            aria-hidden="true"
+          />
+          {/* Mobile bottom bar (hidden on desktop) */}
+          <span
+            className="xl:hidden absolute rounded-sm bg-lime"
+            style={{
+              bottom: -8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 10,
+              height: 3,
+              boxShadow: '0 0 6px oklch(0.86 0.18 115)',
+            }}
+            aria-hidden="true"
+          />
+        </>
       )}
 
       {/* Initials */}
