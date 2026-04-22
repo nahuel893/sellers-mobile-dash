@@ -6,6 +6,10 @@ import type {
   SucursalDetailResponse,
   Cliente,
   CoberturaResponse,
+  Preventista,
+  SparklineResponse,
+  DeltaResponse,
+  WeatherResponse,
 } from '../types/api';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
@@ -162,4 +166,15 @@ export const api = {
       Object.keys(params).length ? params : undefined,
     );
   },
+  getPreventistas: (sucursal: number) =>
+    apiFetch<Preventista[]>('/api/preventistas', { sucursal: String(sucursal) }),
+  getSparkline: (slug: string, dias: number, categoria: string) =>
+    apiFetch<SparklineResponse>(`/api/avance/sparkline/${slug}`, {
+      dias: String(dias),
+      categoria,
+    }),
+  getDelta: (slug: string, categoria: string) =>
+    apiFetch<DeltaResponse>(`/api/avance/delta/${slug}`, { categoria }),
+  getWeather: (city: string) =>
+    apiFetch<WeatherResponse>('/api/weather', { city }),
 };
