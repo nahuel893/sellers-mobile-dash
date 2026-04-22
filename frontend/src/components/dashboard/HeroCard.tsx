@@ -72,8 +72,9 @@ export function HeroCard({
   const toneColor = TONE_COLORS[tone];
 
   return (
-    <div
+    <section
       className="border border-line rounded-[18px] p-7 relative overflow-hidden"
+      aria-label={`${badgeLabel} - avance del mes`}
       style={{
         background: 'linear-gradient(180deg, var(--color-bg-1, #17150f), var(--color-bg-0, #0e0d0b))',
       }}
@@ -100,8 +101,8 @@ export function HeroCard({
           >
             {eyebrow}
           </div>
-          <div
-            className="text-ink-0 font-sans font-semibold flex items-center gap-2.5"
+          <h2
+            className="text-ink-0 font-sans font-semibold flex items-center gap-2.5 m-0"
             style={{ fontSize: 20, letterSpacing: '-0.01em' }}
           >
             {iniciales && (
@@ -121,7 +122,7 @@ export function HeroCard({
                 / {ruta}
               </span>
             )}
-          </div>
+          </h2>
         </div>
 
         {/* Status badge */}
@@ -195,6 +196,6 @@ export function HeroCard({
           <WeatherWidget variant="desktop" city="salta" />
         </div>
       )}
-    </div>
+    </section>
   );
 }

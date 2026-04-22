@@ -13,7 +13,7 @@ Mobile-first sales dashboard ("Avance Preventa") for beverage company sales reps
 ### Backend (FastAPI)
 ```bash
 cd backend && .venv/bin/uvicorn main:app --reload --port 8000  # Dev server
-cd backend && .venv/bin/pytest -v                                # 39 tests
+cd backend && .venv/bin/pytest -v                                # 305 tests
 cd backend && .venv/bin/pytest tests/test_api.py -v              # Single file
 cd backend && .venv/bin/pytest -k test_falta                     # By keyword
 ```
@@ -49,7 +49,10 @@ backend/
 ├── routers/
 │   ├── dashboard.py     # /api/dashboard, /api/vendedor, /api/supervisor, /api/sucursal
 │   ├── mapa.py          # /api/mapa/{slug} (direct DB query)
-│   └── config_router.py # /api/config/dias-habiles
+│   ├── config_router.py # /api/config/dias-habiles
+│   ├── preventistas.py  # /api/preventistas
+│   ├── avance.py        # /api/avance/sparkline, /api/avance/delta
+│   └── weather.py       # /api/weather (OpenWeatherMap proxy, 10 min cache)
 ├── data/
 │   ├── data_loader.py   # Orchestrates: DB query + cupos merge + fallback
 │   ├── db.py            # PostgreSQL connection pool
@@ -57,7 +60,7 @@ backend/
 │   └── mock_data.py     # Mock data fallback
 ├── services/
 │   └── ventas_service.py # Business logic: filtering, aggregation, trends
-└── tests/               # 39 tests (pytest + httpx TestClient)
+└── tests/               # 305 tests (pytest + httpx TestClient)
 ```
 
 ### Frontend (`frontend/`)
@@ -127,6 +130,7 @@ Interactive docs: `http://localhost:8000/docs`
 | Route | Page | Description |
 |-------|------|-------------|
 | `/` | Home | Cascading filters + gauges + vendor carousels |
+| `/sellers` | Dashboard | Seller rail + hero radial + brand cards + weather |
 | `/vendedor/{slug}` | Vendedor | All categories stacked vertically |
 | `/supervisor/{slug}` | Supervisor | Category toggle + vendor blocks with sync |
 | `/sucursal/{id}` | Sucursal | Branch summary + supervisor blocks |
@@ -173,8 +177,25 @@ PostgreSQL Gold layer (Medallion Architecture). Star schema with `fact_ventas` (
 | `SummaryBlock` | Sucursal/supervisor aggregate block with carousel |
 | `VendorBlock` | Vendor name-link + carousel |
 | `CustomerMap` | Leaflet wrapper with markers + popups |
+| `RadialProgress` | 180×180 SVG ring gauge with gradient stops and center KPI |
+| `BrandCard` | Dark brand tile: progress strip, %, delta pp chip, KPI grid, sparkline |
+| `BrandSparkline` | Memoized SVG sparkline (area + line + last-point dot) |
+| `SellerButton` | 36×36 avatar button with tooltip, active indicator, CC gradient variant |
+| `SellerRail` | Fixed left rail (desktop) / horizontal scroll strip (mobile) |
+| `HeroCard` | Main KPI card: radial ring + KPI list + day-progress bar + trend row + weather |
+| `WeatherWidget` | Weather card (desktop: inside hero; mobile: standalone below brand list) |
+| `TopBar` | Brand mark + seller title + category tabs + sync status chip |
+| `BottomNav` | Mobile-only 4-item bottom navigation (hidden at md+) |
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `POSTGRES_*` | Yes | PostgreSQL Gold DW credentials (see `.env.example`) |
+| `OPENWEATHER_API_KEY` | No | Enables live weather proxy at `/api/weather?city=salta`. Falls back to `condition: "desconocido"` payload when missing. |
 
 ## Known Issues
 
 - Mapa endpoint requires live PostgreSQL connection (no mock fallback)
 - `responsive=True` on Dash `dcc.Graph` breaks gauges (legacy only)
+- `framer-motion` added for AnimatePresence slide transitions between sellers on `/sellers` (adds ~25 kB gzipped to the bundle)

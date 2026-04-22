@@ -42,6 +42,8 @@ function BrandCardBase({
     <article
       className="bg-bg-1 border border-line rounded-[14px] p-4 md:p-[18px] relative overflow-hidden
                  transition-colors duration-200 hover:border-line-2"
+      role="region"
+      aria-label={`Marca ${grupoMarca}`}
       style={{
         ['--card-color' as string]: `var(--color-${colorToken}, currentColor)`,
         ['--card-progress' as string]: `${clampedPct}%`,
@@ -70,16 +72,17 @@ function BrandCardBase({
             }}
             aria-hidden="true"
           />
-          <span
-            className="font-sans font-semibold uppercase text-ink-0"
+          <h3
+            className="font-sans font-semibold uppercase text-ink-0 m-0 p-0"
             style={{ fontSize: 13, letterSpacing: '0.04em' }}
           >
             {grupoMarca}
-          </span>
+          </h3>
         </div>
         <span
           className="font-mono text-ink-3"
           style={{ fontSize: 11, fontWeight: 500 }}
+          aria-label={`Ranking ${rankStr}`}
         >
           {rankStr}
         </span>
