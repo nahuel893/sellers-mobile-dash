@@ -378,8 +378,18 @@ export default function DashboardPage() {
     if (!categoryData) return [];
 
     const datos = categoryData.datos.filter((d) => d.grupo_marca !== null);
-    // Sort by pct desc for rank
-    const sorted = [...datos].sort((a, b) => b.pct_tendencia - a.pct_tendencia);
+    // Custom brand order: SALTA, HEINEKEN, IMPERIAL, MILLER first; rest by pct desc
+    const BRAND_ORDER = ['SALTA', 'HEINEKEN', 'IMPERIAL', 'MILLER'];
+    const rank = (g: string) => {
+      const i = BRAND_ORDER.indexOf(g);
+      return i === -1 ? Infinity : i;
+    };
+    const sorted = [...datos].sort((a, b) => {
+      const ra = rank(a.grupo_marca!);
+      const rb = rank(b.grupo_marca!);
+      if (ra !== rb) return ra - rb;
+      return b.pct_tendencia - a.pct_tendencia;
+    });
 
     return sorted.map((marca, idx) => {
       // Build sparkline points for this grupo_marca

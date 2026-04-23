@@ -107,12 +107,6 @@ function RadialProgressBase({
           </span>
           <span className="text-ink-2" style={{ fontSize: 20 }}>%</span>
         </div>
-        <div
-          className="text-ink-2 font-sans font-semibold uppercase mt-2"
-          style={{ fontSize: 10, letterSpacing: '0.16em' }}
-        >
-          Avance
-        </div>
       </div>
     </div>
   );

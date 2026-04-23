@@ -29,19 +29,19 @@ interface HeroCardProps {
   iniciales?: string;
   /** Overall % tendencia */
   pct: number;
-  /** Vendido (hl) */
+  /** Vendido (bultos) */
   vendido: number;
-  /** Cupo total (hl) */
+  /** Cupo total (bultos) */
   cupo: number;
-  /** Falta (hl) */
+  /** Falta (bultos) */
   falta: number;
-  /** Required daily sales (hl/day) */
+  /** Required daily sales (bultos/day) */
   ventaDiaRequerida: number;
   /** Days elapsed as % of month */
   daysElapsedPct: number;
   /** Days remaining in month */
   daysRemaining: number;
-  /** Projected end-of-month (hl) */
+  /** Projected end-of-month (bultos) */
   tendencia: number;
   /** Gap: tendencia - cupo */
   gap: number;
@@ -144,15 +144,23 @@ export function HeroCard({
 
       {/* ── Radial row ── */}
       <div className="flex items-center gap-6 py-2 pb-5">
-        <RadialProgress pct={pct} size={180} strokeWidth={14} />
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <span
+            className="text-ink-2 font-sans font-semibold uppercase"
+            style={{ fontSize: 10, letterSpacing: '0.2em' }}
+          >
+            Tendencia
+          </span>
+          <RadialProgress pct={pct} size={180} strokeWidth={14} />
+        </div>
 
         {/* KPI list */}
         <div className="flex flex-col gap-3.5 flex-1">
           {[
-            { label: 'Vendido',     value: fmtNum(vendido),          className: 'text-ink-0' },
-            { label: 'Cupo',        value: fmtNum(cupo),             className: 'text-ink-0' },
-            { label: 'Falta',       value: fmtNum(falta),            className: '',           style: { color: 'oklch(0.70 0.18 27)' } },
-            { label: 'Vta/día req.', value: fmtNum(ventaDiaRequerida), className: '',          style: { color: 'oklch(0.86 0.18 115)' } },
+            { label: 'Cupo',     value: fmtNum(cupo),             className: 'text-ink-0' },
+            { label: 'Venta',    value: fmtNum(vendido),          className: 'text-ink-0' },
+            { label: 'Falta',    value: fmtNum(falta),            className: '', style: { color: 'oklch(0.70 0.18 27)' } },
+            { label: 'Vta/día',  value: fmtNum(ventaDiaRequerida), className: '', style: { color: 'oklch(0.86 0.18 115)' } },
           ].map(({ label, value, className, style }, idx, arr) => (
             <div
               key={label}

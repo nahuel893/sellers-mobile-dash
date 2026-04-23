@@ -152,13 +152,13 @@ function BrandCardBase({
             className="font-sans font-semibold uppercase text-ink-3"
             style={{ fontSize: 9, letterSpacing: '0.14em' }}
           >
-            Vendido
+            Cupo
           </span>
           <span
             className="font-mono font-semibold text-ink-1"
             style={{ fontSize: 15, letterSpacing: '-0.01em' }}
           >
-            {fmtNum(vendido)}
+            {fmtNum(cupo)}
           </span>
         </div>
 
@@ -167,13 +167,13 @@ function BrandCardBase({
             className="font-sans font-semibold uppercase text-ink-3"
             style={{ fontSize: 9, letterSpacing: '0.14em' }}
           >
-            Cupo
+            Vendido
           </span>
           <span
             className="font-mono font-semibold text-ink-1"
             style={{ fontSize: 15, letterSpacing: '-0.01em' }}
           >
-            {fmtNum(cupo)}
+            {fmtNum(vendido)}
           </span>
         </div>
 
