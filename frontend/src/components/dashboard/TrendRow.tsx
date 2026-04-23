@@ -1,13 +1,13 @@
 import { fmtNum } from '../../lib/format';
 
 interface TrendRowProps {
-  /** Projected end-of-month volume (hl) */
+  /** Projected end-of-month volume (bultos) */
   tendencia: number;
-  /** Total quota (hl) */
+  /** Total quota (bultos) */
   cupoTotal: number;
   /** Gap = tendencia - cupoTotal (positive = surplus, negative = deficit) */
   gap: number;
-  /** Required daily rhythm to close the gap (hl/day) */
+  /** Required daily rhythm to close the gap (bultos/day) */
   ritmoRequerido: number;
 }
 
@@ -63,7 +63,7 @@ export function TrendRow({ tendencia, cupoTotal, gap, ritmoRequerido }: TrendRow
             color: isPositiveGap ? 'oklch(0.78 0.16 145)' : 'oklch(0.70 0.18 27)',
           }}
         >
-          necesita {fmtNum(ritmoRequerido)} hl/día
+          necesita {fmtNum(ritmoRequerido)} bultos/día
         </div>
       </div>
     </div>
