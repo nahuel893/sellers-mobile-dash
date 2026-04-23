@@ -175,9 +175,15 @@ def get_supervisor_detail(
         if not sucursal_str:
             raise HTTPException(status_code=404, detail=f'Sucursal "{sucursal}" no encontrada')
 
-    # Verificar que el supervisor existe
-    if supervisor not in df['supervisor'].values:
+    # Case-insensitive lookup: slug may arrive in any case from the router.
+    # Resolve to the actual uppercase/canonical value present in the DataFrame.
+    canonical_matches = df.loc[
+        df['supervisor'].astype(str).str.upper() == str(supervisor).upper(),
+        'supervisor',
+    ].unique()
+    if len(canonical_matches) == 0:
         raise HTTPException(status_code=404, detail=f'Supervisor "{supervisor}" no encontrado')
+    supervisor = canonical_matches[0]
 
     vendedores = get_vendedores_por_supervisor(df, supervisor, sucursal_str)
 

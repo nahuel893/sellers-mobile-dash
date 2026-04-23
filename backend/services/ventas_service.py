@@ -34,19 +34,33 @@ def get_sucursales(df):
     return sorted(sucursales, key=lambda s: int(s.split(' - ')[0]))
 
 
+def _filter_sucursal(df, sucursal):
+    """Filtra df por sucursal aceptando ID numérico ('1') o descripción completa ('1 - NOMBRE').
+
+    Razón: la columna sucursal tiene formato 'id - NOMBRE'. Algunos callers pasan
+    solo el id (rail del dashboard redesign) y otros la descripción completa
+    (endpoint /api/dashboard). Este helper unifica ambos casos.
+    """
+    sucursal_str = str(sucursal)
+    if ' - ' in sucursal_str:
+        return df[df['sucursal'] == sucursal_str]
+    prefix = f"{sucursal_str} - "
+    return df[df['sucursal'].astype(str).str.startswith(prefix)]
+
+
 def get_supervisores(df, sucursal=None):
     """Lista de supervisores disponibles, opcionalmente filtrados por sucursal."""
     if sucursal:
-        df = df[df['sucursal'] == sucursal]
-    return sorted(df['supervisor'].unique().tolist())
+        df = _filter_sucursal(df, sucursal)
+    return sorted(df['supervisor'].dropna().unique().tolist())
 
 
 def get_vendedores_por_supervisor(df, supervisor, sucursal=None):
     """Lista de vendedores de un supervisor, opcionalmente filtrados por sucursal."""
-    mask = df['supervisor'] == supervisor
     if sucursal:
-        mask = mask & (df['sucursal'] == sucursal)
-    return sorted(df[mask]['vendedor'].unique().tolist())
+        df = _filter_sucursal(df, sucursal)
+    mask = df['supervisor'] == supervisor
+    return sorted(df[mask]['vendedor'].dropna().unique().tolist())
 
 
 def get_datos_vendedor(df, vendedor, categoria='CERVEZAS'):
