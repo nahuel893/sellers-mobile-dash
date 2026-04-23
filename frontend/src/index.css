@@ -6,6 +6,18 @@
 @tailwind utilities;
 
 @layer base {
+  /* Accent tokens exposed as CSS custom properties for inline-style consumers
+     (e.g. BrandCard uses var(--color-info) etc. for dynamic brand colors).
+     Keep values in sync with tailwind.config.js colors.{info,ok,warn,lime,violet,danger}. */
+  :root {
+    --color-info:   oklch(0.78 0.14 230);
+    --color-ok:     oklch(0.78 0.16 145);
+    --color-warn:   oklch(0.78 0.16 70);
+    --color-lime:   oklch(0.86 0.18 115);
+    --color-violet: oklch(0.72 0.16 300);
+    --color-danger: oklch(0.70 0.18 27);
+  }
+
   html, body { margin: 0; padding: 0; }
   body {
     @apply bg-bg-0 text-ink-0 font-sans;
