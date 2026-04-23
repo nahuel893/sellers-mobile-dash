@@ -8,6 +8,7 @@ import { api } from '../lib/api-client';
 import { SellerRail } from '../components/dashboard/SellerRail';
 import { TopBar } from '../components/dashboard/TopBar';
 import { HeroCard } from '../components/dashboard/HeroCard';
+import { GenericBlock } from '../components/dashboard/GenericBlock';
 import { BrandGrid } from '../components/dashboard/BrandGrid';
 import { StatsStrip } from '../components/dashboard/StatsStrip';
 import { WeatherWidget } from '../components/dashboard/WeatherWidget';
@@ -15,6 +16,7 @@ import { BottomNav } from '../components/dashboard/BottomNav';
 
 import { usePreventistas } from '../hooks/use-preventistas';
 import { useVendedor } from '../hooks/use-vendedor';
+import { useSupervisor } from '../hooks/use-supervisor';
 import { useSucursal } from '../hooks/use-sucursal';
 import { useAvanceSparkline } from '../hooks/use-avance-sparkline';
 import { useAvanceDelta } from '../hooks/use-avance-delta';
@@ -22,7 +24,32 @@ import { useDiasHabiles } from '../hooks/use-dias-habiles';
 import { useKeyboardNav } from '../hooks/use-keyboard-nav';
 
 import type { BrandCardProps } from '../components/dashboard/BrandCard';
+import type { GenericBlockProps } from '../components/dashboard/GenericBlock';
 import type { CategoryData } from '../types/api';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const GENERICS_KEY = 'GENERICOS';
+const ROOT_LABEL = 'GFARAH';
+const SUPERVISOR_PREFIX = 'sup:';
+
+/** Presentational config for each generic category block */
+const GENERIC_CATEGORIES = [
+  {
+    key: 'AGUAS_DANONE',
+    title: 'Aguas Danone',
+    eyebrow: 'Genérico',
+    caption: 'Aguas',
+  },
+  {
+    key: 'MULTICCU',
+    title: 'MultiCCU',
+    eyebrow: 'Grupo de genéricos',
+    caption: 'Vinos CCU · Sidras · Licores',
+  },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -75,6 +102,49 @@ function heroPropsFromCategory(
     gap,
     ritmoRequerido,
     showWeather: true,
+  };
+}
+
+/**
+ * Derive GenericBlock props from a CategoryData.
+ * Returns null when data is not yet available.
+ */
+function genericBlockPropsFromCategory(
+  categoryData: CategoryData | undefined,
+  title: string,
+  eyebrow: string,
+  caption: string,
+  daysElapsedPct: number,
+  daysRemaining: number,
+): GenericBlockProps | null {
+  if (!categoryData) return null;
+
+  const { resumen } = categoryData;
+  const pct = resumen.pct_tendencia ?? 0;
+  const vendido = resumen.ventas ?? 0;
+  const cupo = resumen.cupo ?? 0;
+  const falta = resumen.falta ?? 0;
+  const tendencia = resumen.tendencia ?? 0;
+  const gap = tendencia - cupo;
+
+  const diasRestantesEff = Math.max(daysRemaining, 1);
+  const ventaDiaRequerida = falta / diasRestantesEff;
+  const ritmoRequerido = cupo > 0 ? (falta / cupo) * 100 : 0;
+
+  return {
+    eyebrow,
+    title,
+    caption,
+    pct,
+    vendido,
+    cupo,
+    falta,
+    ventaDiaRequerida,
+    daysElapsedPct,
+    daysRemaining,
+    tendencia,
+    gap,
+    ritmoRequerido,
   };
 }
 
@@ -164,15 +234,21 @@ export default function DashboardPage() {
   const { data: preventistas = [] } = usePreventistas(1);
   const { data: diasHabiles } = useDiasHabiles();
 
-  // Fallback: if saved sellerId is no longer in the list, reset to 'cc'
+  // ── Selection kind derived from sellerId shape ───────────────────────────
+  const isRoot = sellerId === 'cc';
+  const isSup = sellerId.startsWith(SUPERVISOR_PREFIX);
+  const supSlug = isSup ? sellerId.slice(SUPERVISOR_PREFIX.length) : undefined;
+  const venSlug = !isRoot && !isSup ? sellerId : undefined;
+
+  // Fallback: if saved sellerId is a vendedor no longer in the list, reset to root
   useEffect(() => {
-    if (sellerId === 'cc') return;
+    if (isRoot || isSup) return;
     if (preventistas.length > 0 && !preventistas.find((p) => p.slug === sellerId)) {
       setSellerId('cc');
     }
-  }, [preventistas, sellerId]);
+  }, [preventistas, sellerId, isRoot, isSup]);
 
-  // All sellers in order (cc first, then list)
+  // All sellers in order (cc first, then list) — supervisors are reached via tree, not arrows
   const allIds = useMemo(() => ['cc', ...preventistas.map((p) => p.slug)], [preventistas]);
   // ── Keyboard nav ──────────────────────────────────────────────────────────
   const switchTo = (id: string) => {
@@ -185,12 +261,14 @@ export default function DashboardPage() {
   const prevId = () => {
     if (allIds.length === 0) return sellerId;
     const idx = allIds.indexOf(sellerId);
+    if (idx === -1) return 'cc'; // supervisor selected → arrows jump to root
     return allIds[(idx - 1 + allIds.length) % allIds.length];
   };
 
   const nextId = () => {
     if (allIds.length === 0) return sellerId;
     const idx = allIds.indexOf(sellerId);
+    if (idx === -1) return 'cc';
     return allIds[(idx + 1) % allIds.length];
   };
 
@@ -200,34 +278,49 @@ export default function DashboardPage() {
     enabled: true,
   });
 
-  // ── Current seller metadata ───────────────────────────────────────────────
-  const currentPreventista = preventistas.find((p) => p.slug === sellerId);
-  const currentSellerName =
-    sellerId === 'cc' ? 'Casa Central' : (currentPreventista?.nombre ?? sellerId);
-
   // ── Seller-specific data ─────────────────────────────────────────────────
-  // For 'cc': use useSucursal('1') — returns sucursal-level aggregate CategoryData
-  // For a real slug: use useVendedor(slug) — returns vendedor CategoryData
+  // Root → useSucursal('1'), supervisor → useSupervisor(slug), vendedor → useVendedor(slug)
   const { data: sucursalData, isLoading: isLoadingSucursal } = useSucursal(
-    sellerId === 'cc' ? '1' : undefined,
+    isRoot ? '1' : undefined,
   );
-  const { data: vendedorData, isLoading: isLoadingVendedor } = useVendedor(
-    sellerId !== 'cc' ? sellerId : undefined,
+  const { data: supervisorData, isLoading: isLoadingSupervisor } = useSupervisor(
+    supSlug,
+    '1',
   );
+  const { data: vendedorData, isLoading: isLoadingVendedor } = useVendedor(venSlug);
 
-  const isLoading = sellerId === 'cc' ? isLoadingSucursal : isLoadingVendedor;
+  const isLoading = isRoot
+    ? isLoadingSucursal
+    : isSup
+      ? isLoadingSupervisor
+      : isLoadingVendedor;
 
   // Raw categories for active seller
-  const categories: Record<string, CategoryData> | undefined =
-    sellerId === 'cc' ? sucursalData?.categories : vendedorData?.categories;
+  const categories: Record<string, CategoryData> | undefined = isRoot
+    ? sucursalData?.categories
+    : isSup
+      ? supervisorData?.categories
+      : vendedorData?.categories;
 
   // Active category data
   const categoryData = categories?.[activeCategory];
 
+  // ── Current seller metadata ───────────────────────────────────────────────
+  const currentPreventista = preventistas.find((p) => p.slug === sellerId);
+  const currentSellerName = isRoot
+    ? ROOT_LABEL
+    : isSup
+      ? (supervisorData?.nombre ?? supSlug!)
+      : (currentPreventista?.nombre ?? sellerId);
+
   // ── Sparkline + Delta ─────────────────────────────────────────────────────
-  const effectiveSlug = sellerId === 'cc' ? 'casa-central' : sellerId;
-  const { data: sparklineData } = useAvanceSparkline(effectiveSlug, 18, activeCategory);
-  const { data: deltaData } = useAvanceDelta(effectiveSlug, activeCategory);
+  // Root keeps the legacy 'casa-central' slug; supervisor/vendedor use their own slug.
+  const effectiveSlug = isRoot ? 'casa-central' : isSup ? supSlug! : sellerId;
+  // GENERICOS layout has no brand grid → no sparkline/delta needed.
+  // Fall back to 'CERVEZAS' to keep the cache warm for the next tab switch.
+  const sparklineCat = activeCategory === GENERICS_KEY ? 'CERVEZAS' : activeCategory;
+  const { data: sparklineData } = useAvanceSparkline(effectiveSlug, 18, sparklineCat);
+  const { data: deltaData } = useAvanceDelta(effectiveSlug, sparklineCat);
 
   // ── Days elapsed pct ──────────────────────────────────────────────────────
   const daysElapsedPct = diasHabiles
@@ -236,19 +329,48 @@ export default function DashboardPage() {
   const daysRemaining = diasHabiles?.restantes ?? 0;
 
   // ── Hero props ────────────────────────────────────────────────────────────
+  const heroEyebrow = isRoot ? 'Sucursal' : isSup ? 'Supervisor' : 'Vendedor';
+  const heroRuta = isRoot
+    ? 'Agregado total'
+    : isSup
+      ? null
+      : (currentPreventista?.ruta ?? null);
+  const heroIniciales = isRoot
+    ? 'GF'
+    : isSup
+      ? undefined
+      : currentPreventista?.iniciales;
+
   const heroProps = useMemo(
     () =>
       heroPropsFromCategory(
         categoryData,
         currentSellerName,
-        sellerId === 'cc' ? 'Sucursal' : 'Vendedor',
-        currentPreventista?.ruta ?? null,
-        sellerId === 'cc' ? 'CC' : currentPreventista?.iniciales,
+        heroEyebrow,
+        heroRuta,
+        heroIniciales,
         daysElapsedPct,
         daysRemaining,
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [categoryData, currentSellerName, sellerId, daysElapsedPct, daysRemaining],
+  );
+
+  // ── GenericBlock props (AGUAS_DANONE + MULTICCU) ─────────────────────────
+  const genericBlocksProps = useMemo(
+    () =>
+      GENERIC_CATEGORIES.map((cat) => ({
+        key: cat.key,
+        props: genericBlockPropsFromCategory(
+          categories?.[cat.key],
+          cat.title,
+          cat.eyebrow,
+          cat.caption,
+          daysElapsedPct,
+          daysRemaining,
+        ),
+      })),
+    [categories, daysElapsedPct, daysRemaining],
   );
 
   // ── BrandCard props ───────────────────────────────────────────────────────
@@ -296,23 +418,37 @@ export default function DashboardPage() {
   // ── Prefetch adjacent sellers ─────────────────────────────────────────────
   const queryClient = useQueryClient();
 
-  const handlePrefetch = (slug: string) => {
-    const prefetchSlug = slug === 'cc' ? 'casa-central' : slug;
+  const handlePrefetch = (id: string) => {
+    const prefetchSlug =
+      id === 'cc'
+        ? 'casa-central'
+        : id.startsWith(SUPERVISOR_PREFIX)
+          ? id.slice(SUPERVISOR_PREFIX.length)
+          : id;
+
     queryClient.prefetchQuery({
-      queryKey: ['sparkline', prefetchSlug, 18, activeCategory],
-      queryFn: () => api.getSparkline(prefetchSlug, 18, activeCategory),
+      queryKey: ['sparkline', prefetchSlug, 18, sparklineCat],
+      queryFn: () => api.getSparkline(prefetchSlug, 18, sparklineCat),
       staleTime: 5 * 60 * 1000,
     });
     queryClient.prefetchQuery({
-      queryKey: ['delta', prefetchSlug, activeCategory],
-      queryFn: () => api.getDelta(prefetchSlug, activeCategory),
+      queryKey: ['delta', prefetchSlug, sparklineCat],
+      queryFn: () => api.getDelta(prefetchSlug, sparklineCat),
       staleTime: 5 * 60 * 1000,
     });
-    // Prefetch vendedor detail too (skip for 'cc' — uses sucursal endpoint)
-    if (slug !== 'cc') {
+
+    // Prefetch detail endpoint based on node kind
+    if (id.startsWith(SUPERVISOR_PREFIX)) {
+      const supSlugToFetch = id.slice(SUPERVISOR_PREFIX.length);
       queryClient.prefetchQuery({
-        queryKey: ['vendedor', slug],
-        queryFn: () => api.getVendedor(slug),
+        queryKey: ['supervisor', supSlugToFetch, '1'],
+        queryFn: () => api.getSupervisor(supSlugToFetch, '1'),
+        staleTime: 5 * 60 * 1000,
+      });
+    } else if (id !== 'cc') {
+      queryClient.prefetchQuery({
+        queryKey: ['vendedor', id],
+        queryFn: () => api.getVendedor(id),
         staleTime: 5 * 60 * 1000,
       });
     }
@@ -334,8 +470,8 @@ export default function DashboardPage() {
     <div
       className={[
         'min-h-screen bg-bg-0 text-ink-0',
-        // Desktop: leave room for fixed left rail
-        'xl:pl-[84px] xl:pr-9 xl:pt-7 xl:pb-12',
+        // Desktop: leave room for fixed left rail (tight — rail flush left)
+        'xl:pl-[128px] xl:pr-9 xl:pt-7 xl:pb-12',
         // Tablet + mobile: no left padding (rail becomes horizontal strip)
         'md:px-4 md:pt-5 md:pb-12',
         // Mobile: 90px bottom to clear fixed BottomNav (RF-MOBILE-RESPONSIVE-04)
@@ -359,59 +495,84 @@ export default function DashboardPage() {
           syncedAt={syncedAt}
         />
 
-        {/* Main grid: hero left (420px) + right column */}
-        <div className="grid xl:grid-cols-[420px_1fr] grid-cols-1 gap-5 items-start">
+        {/* Main grid — layout depends on active tab */}
+        {activeCategory === GENERICS_KEY ? (
+          // ── GENERICOS layout: two large blocks side-by-side (stacked on mobile) ──
+          <div className="grid xl:grid-cols-2 grid-cols-1 gap-5 items-start">
+            {genericBlocksProps.map(({ key, props }) => (
+              <AnimatePresence key={key} mode="wait" custom={direction}>
+                <motion.div
+                  key={sellerId + '-' + key}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                >
+                  {isLoading || !props ? (
+                    <HeroSkeleton />
+                  ) : (
+                    <GenericBlock {...props} />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            ))}
+          </div>
+        ) : (
+          // ── CERVEZAS layout: hero left (420px) + brand grid right ──
+          <div className="grid xl:grid-cols-[420px_1fr] grid-cols-1 gap-5 items-start">
 
-          {/* ── Left: Hero ─────────────────────────────────────────────── */}
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={sellerId + '-hero'}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-            >
-              {isLoading || !heroProps ? (
-                <HeroSkeleton />
-              ) : (
-                <HeroCard {...heroProps} />
-              )}
-            </motion.div>
-          </AnimatePresence>
+            {/* ── Left: Hero ─────────────────────────────────────────────── */}
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={sellerId + '-hero'}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+              >
+                {isLoading || !heroProps ? (
+                  <HeroSkeleton />
+                ) : (
+                  <HeroCard {...heroProps} />
+                )}
+              </motion.div>
+            </AnimatePresence>
 
-          {/* ── Right: Brand detail ────────────────────────────────────── */}
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={sellerId + '-right'}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-            >
-              {isLoading || brandCards.length === 0 ? (
-                <>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="h-4 w-48 bg-white/10 rounded animate-pulse" />
-                  </div>
-                  <BrandGridSkeleton />
-                </>
-              ) : (
-                <>
-                  <h2
-                    className="font-sans font-semibold text-ink-1 mb-4"
-                    style={{ fontSize: 13, letterSpacing: '0.02em' }}
-                  >
-                    Detalle por marca · {brandCards.length} marcas
-                  </h2>
-                  <BrandGrid cards={brandCards} />
-                  <StatsStrip brands={brandStats} />
-                </>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+            {/* ── Right: Brand detail ────────────────────────────────────── */}
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={sellerId + '-right'}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+              >
+                {isLoading || brandCards.length === 0 ? (
+                  <>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="h-4 w-48 bg-white/10 rounded animate-pulse" />
+                    </div>
+                    <BrandGridSkeleton />
+                  </>
+                ) : (
+                  <>
+                    <h2
+                      className="font-sans font-semibold text-ink-1 mb-4"
+                      style={{ fontSize: 13, letterSpacing: '0.02em' }}
+                    >
+                      Detalle por marca · {brandCards.length} marcas
+                    </h2>
+                    <BrandGrid cards={brandCards} />
+                    <StatsStrip brands={brandStats} />
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Mobile: weather card below brand list */}
         <div className="md:hidden mt-4 mx-0">
