@@ -1,10 +1,16 @@
 
+/** Title-case a name, handling ALL-CAPS DB values and words with hyphens. */
+function toTitleCase(s: string): string {
+  if (!s) return '';
+  return s
+    .toLowerCase()
+    .replace(/(^|[\s\-/])([a-záéíóúñü])/g, (_, sep: string, ch: string) => sep + ch.toUpperCase());
+}
+
 interface SellerButtonProps {
-  /** 2-letter initials */
-  iniciales: string;
-  /** Full seller name (used in aria-label and tooltip) */
+  /** Full seller name (shown on the pill; truncated if overflow) */
   nombre: string;
-  /** Route identifier e.g. "Ruta 01" */
+  /** Route identifier e.g. "Ruta 01" (used in aria-label only) */
   ruta?: string | null;
   /** Currently selected */
   isActive: boolean;
@@ -15,11 +21,11 @@ interface SellerButtonProps {
 }
 
 /**
- * 36×36 seller avatar button for SellerRail.
- * Desktop: fixed left rail. Mobile: horizontal strip.
+ * Seller pill for SellerRail.
+ * Desktop (xl): vertical rail, fixed width. Mobile: horizontal scroll strip.
+ * Shows full lowercase name in 10px; truncates if overflow (full name on hover title).
  */
 export function SellerButton({
-  iniciales,
   nombre,
   ruta,
   isActive,
@@ -31,10 +37,13 @@ export function SellerButton({
     <button
       type="button"
       className={[
-        'relative flex items-center justify-center',
-        'w-9 h-9 rounded-xl2 border transition-all duration-[180ms] cursor-pointer',
-        'font-sans font-bold text-[11px] tracking-[0.03em]',
+        'relative flex items-center',
+        'h-9 px-3 rounded-xl2 border transition-all duration-[180ms] cursor-pointer',
+        'font-sans font-medium text-[10px] leading-tight tracking-[-0.005em]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime',
+        'flex-shrink-0',
+        // Width: 1/3 narrower than previous pass — mobile 96, desktop 116
+        'w-[96px] xl:w-[116px]',
         // Base state
         !isActive && !isCC
           ? 'bg-bg-2 border-line text-ink-2 hover:text-ink-0 hover:border-line-2 hover:translate-x-0.5'
@@ -51,8 +60,6 @@ export function SellerButton({
         isCC && isActive
           ? 'outline outline-2 outline-ink-0 outline-offset-2 border-transparent text-bg-0'
           : '',
-        // Flex-shrink so rail doesn't compress buttons
-        'flex-shrink-0',
       ].join(' ')}
       style={
         isCC
@@ -61,16 +68,17 @@ export function SellerButton({
       }
       aria-label={`Ver avance de ${nombre}${ruta ? ` · ${ruta}` : ''}`}
       aria-pressed={isActive}
+      title={toTitleCase(nombre)}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
     >
       {/* Active indicator bar:
-          - xl (desktop): 3×20px bar at left:-13px (vertical rail)
-          - <xl (mobile strip): 10×3px bar at bottom:-8px (horizontal strip)
+          - xl (desktop): 3×20 bar at left:-13 (vertical rail)
+          - <xl (mobile strip): 10×3 bar at bottom:-8 (horizontal strip)
       */}
       {isActive && !isCC && (
         <>
-          {/* Desktop left bar (hidden on mobile) */}
+          {/* Desktop left bar */}
           <span
             className="hidden xl:block absolute rounded-sm bg-lime"
             style={{
@@ -83,7 +91,7 @@ export function SellerButton({
             }}
             aria-hidden="true"
           />
-          {/* Mobile bottom bar (hidden on desktop) */}
+          {/* Mobile bottom bar */}
           <span
             className="xl:hidden absolute rounded-sm bg-lime"
             style={{
@@ -99,35 +107,9 @@ export function SellerButton({
         </>
       )}
 
-      {/* Initials */}
-      <span className="relative z-10 leading-none">{iniciales}</span>
-
-      {/* Tooltip */}
-      <span
-        className={[
-          'pointer-events-none absolute z-50',
-          'left-[calc(100%+12px)] top-1/2',
-          '-translate-y-1/2 translate-x-[-4px]',
-          'bg-bg-3 text-ink-0 border border-line-2 rounded-[6px]',
-          'px-2.5 py-1.5 whitespace-nowrap',
-          'opacity-0 transition-all duration-[180ms]',
-          'shadow-[0_4px_12px_rgba(0,0,0,0.4)]',
-          // Show on parent hover via sibling combinator not available in Tailwind → use group
-          'group-hover:opacity-100 group-hover:translate-x-0',
-        ].join(' ')}
-        role="tooltip"
-      >
-        <span className="font-sans font-medium text-[11px] tracking-[-0.005em]">
-          {nombre}
-        </span>
-        {ruta && (
-          <span
-            className="block font-mono text-ink-3 mt-[1px]"
-            style={{ fontSize: 9, letterSpacing: '0.02em' }}
-          >
-            {ruta}
-          </span>
-        )}
+      {/* Name — truncate to avoid overflow; full name in `title` attr for hover */}
+      <span className="relative z-10 truncate w-full text-left">
+        {toTitleCase(nombre)}
       </span>
     </button>
   );

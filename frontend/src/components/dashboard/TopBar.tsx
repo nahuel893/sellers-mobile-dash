@@ -11,9 +11,8 @@ interface TopBarProps {
 }
 
 const CATEGORIES = [
-  { key: 'CERVEZAS',      label: 'Cervezas' },
-  { key: 'MULTI_CCU',     label: 'MultiCCU' },
-  { key: 'AGUAS_DANONE',  label: 'Aguas Danone' },
+  { key: 'CERVEZAS',  label: 'Cervezas' },
+  { key: 'GENERICOS', label: 'ADO/MULTICCU' },
 ];
 
 /** Formats elapsed time in Spanish */
