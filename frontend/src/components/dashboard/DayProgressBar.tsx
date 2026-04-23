@@ -9,13 +9,15 @@ interface DayProgressBarProps {
 }
 
 export function DayProgressBar({ pct, daysElapsedPct, daysRemaining }: DayProgressBarProps) {
-  const clampedPct = Math.max(0, Math.min(100, pct));
+  // Visual fill tops out at 100 (bar width). aria-label reports the real value up to 999.
+  const visualPct = Math.max(0, Math.min(100, pct));
+  const displayPct = Math.max(0, Math.min(999, pct));
   const clampedElapsed = Math.max(0, Math.min(100, daysElapsedPct));
 
   return (
     <div
       className="mt-[22px] pt-[22px] border-t border-line"
-      aria-label={`Progreso del mes: ${clampedPct.toFixed(1)}%`}
+      aria-label={`Progreso del mes: ${displayPct.toFixed(1)}%`}
     >
       {/* Header row */}
       <div
@@ -40,7 +42,7 @@ export function DayProgressBar({ pct, daysElapsedPct, daysRemaining }: DayProgre
         <div
           className="absolute left-0 top-0 h-full rounded-md"
           style={{
-            width: `${clampedPct}%`,
+            width: `${visualPct}%`,
             background: 'linear-gradient(90deg, oklch(0.70 0.18 27), oklch(0.78 0.16 70))',
           }}
         />

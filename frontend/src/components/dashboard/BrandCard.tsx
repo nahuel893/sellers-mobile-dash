@@ -31,7 +31,9 @@ function BrandCardBase({
   const colorToken = BRAND_TO_TOKEN[grupoMarca] ?? 'info';
   const dotClass = BRAND_TO_DOT[grupoMarca] ?? 'bg-info';
 
-  const clampedPct = Math.max(0, Math.min(100, pct));
+  // Visual bars top out at 100% (can't render wider than container). Display number goes up to 999.
+  const visualPct = Math.max(0, Math.min(100, pct));
+  const displayPct = Math.max(0, Math.min(999, pct));
   const clampedElapsed = Math.max(0, Math.min(100, daysElapsedPct));
 
   const rankStr = `#${String(rank).padStart(2, '0')}`;
@@ -46,14 +48,14 @@ function BrandCardBase({
       aria-label={`Marca ${grupoMarca}`}
       style={{
         ['--card-color' as string]: `var(--color-${colorToken}, currentColor)`,
-        ['--card-progress' as string]: `${clampedPct}%`,
+        ['--card-progress' as string]: `${visualPct}%`,
       }}
     >
       {/* Top progress strip (2px) */}
       <div
         className="absolute top-0 left-0 h-[2px] rounded-br-[2px]"
         style={{
-          width: `${clampedPct}%`,
+          width: `${visualPct}%`,
           background: `var(--color-${colorToken})`,
         }}
         aria-hidden="true"
@@ -94,7 +96,7 @@ function BrandCardBase({
           className="font-mono font-bold text-ink-0 leading-none"
           style={{ fontSize: 38, letterSpacing: '-0.03em' }}
         >
-          {Math.floor(clampedPct)}
+          {Math.floor(displayPct)}
           <span className="text-ink-2" style={{ fontSize: 22 }}>%</span>
         </div>
 
@@ -123,7 +125,7 @@ function BrandCardBase({
         <div
           className="absolute left-0 top-0 h-full rounded-[4px]"
           style={{
-            width: `${clampedPct}%`,
+            width: `${visualPct}%`,
             background: `var(--color-${colorToken})`,
           }}
         />

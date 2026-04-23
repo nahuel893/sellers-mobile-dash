@@ -41,21 +41,23 @@ function RadialProgressBase({
   const cx = size / 2;
   const cy = size / 2;
   const circumference = 2 * Math.PI * r;
-  const clampedPct = Math.max(0, Math.min(100, pct));
-  const dashOffset = (1 - clampedPct / 100) * circumference;
+  // Visual arc tops out at 100 (can't render >1 full circle). Display number goes up to 999.
+  const visualPct = Math.max(0, Math.min(100, pct));
+  const displayPct = Math.max(0, Math.min(999, pct));
+  const dashOffset = (1 - visualPct / 100) * circumference;
 
   // Unique gradient id based on tone (safe for multiple instances)
   const gradId = `radial-grad-${resolvedTone}`;
 
-  const bigNum = Math.floor(clampedPct);
-  const decimal = (clampedPct % 1).toFixed(1).slice(1); // ".X"
+  const bigNum = Math.floor(displayPct);
+  const decimal = (displayPct % 1).toFixed(1).slice(1); // ".X"
 
   return (
     <div
       className="relative flex-shrink-0"
       style={{ width: size, height: size }}
       role="img"
-      aria-label={`Avance: ${clampedPct.toFixed(1)}%`}
+      aria-label={`Avance: ${displayPct.toFixed(1)}%`}
     >
       <svg
         width={size}
